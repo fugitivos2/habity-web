@@ -12,11 +12,16 @@ export default function Footer() {
           {/* Brand */}
           <div>
             <div className="flex items-center gap-2 mb-4">
-              <div className="w-10 h-10 bg-gradient-to-br from-primary to-secondary rounded-xl flex items-center justify-center">
-                <Home className="w-6 h-6 text-white" />
+              <div className="w-10 h-10 bg-gradient-to-br from-primary to-secondary rounded-lg flex items-center justify-center">
+                <div className="w-6 h-6 border-2 border-white rounded-sm relative">
+                  <div className="absolute -top-1 left-1/2 -translate-x-1/2 w-0 h-0 border-l-[6px] border-r-[6px] border-b-[6px] border-l-transparent border-r-transparent border-b-white"></div>
+                </div>
               </div>
               <span className="text-2xl font-bold text-white">HABITY</span>
             </div>
+            <p className="text-secondary font-semibold mb-2">
+              Los números hablan, tú decides
+            </p>
             <p className="text-gray-400 mb-6">
               Tu hogar en números. La plataforma integral para el sector inmobiliario.
             </p>

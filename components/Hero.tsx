@@ -5,7 +5,7 @@ import { motion } from 'framer-motion'
 
 export default function Hero() {
   return (
-    <section className="relative overflow-hidden bg-gradient-to-br from-primary via-primary-dark to-blue-900 text-white">
+    <section className="relative overflow-hidden bg-gradient-to-br from-primary via-primary-dark to-blue-900 text-white pt-16">
       {/* Animated background elements */}
       <div className="absolute inset-0 opacity-10">
         <div className="absolute top-20 left-10 w-72 h-72 bg-white rounded-full blur-3xl"></div>
@@ -29,7 +29,11 @@ export default function Hero() {
               <span className="block text-secondary">en números</span>
             </h1>
 
-            <p className="text-xl lg:text-2xl mb-8 text-blue-100 leading-relaxed">
+            <p className="text-xl lg:text-2xl mb-8 text-blue-100 leading-relaxed font-semibold">
+              Los números hablan, tú decides
+            </p>
+
+            <p className="text-lg lg:text-xl mb-8 text-blue-100 leading-relaxed">
               La plataforma integral que <strong>conecta tu sueño inmobiliario</strong> con la realidad financiera
             </p>
 
