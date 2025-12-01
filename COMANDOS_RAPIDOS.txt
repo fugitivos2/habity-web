@@ -1,0 +1,190 @@
+===========================================
+HABITY - COMANDOS RÁPIDOS PARA DEPLOY
+tuhabity.com
+===========================================
+
+📦 PASO 1: DESCOMPRIMIR (en tu ordenador)
+───────────────────────────────────────────
+tar -xzf habity-web-tuhabity-final.tar.gz
+cd habity-web/
+
+
+🐙 PASO 2: INICIALIZAR GIT
+───────────────────────────────────────────
+git init
+git add .
+git commit -m "Initial commit - HABITY tuhabity.com"
+git branch -M main
+
+
+🔗 PASO 3: CONECTAR CON GITHUB
+───────────────────────────────────────────
+# Primero crea el repo en: https://github.com/new
+# Luego ejecuta (reemplaza TU_USUARIO):
+
+git remote add origin https://github.com/TU_USUARIO/habity-web.git
+git push -u origin main
+
+
+☁️ PASO 4: DEPLOY EN VERCEL
+───────────────────────────────────────────
+1. Ve a: https://vercel.com/signup
+2. Login con GitHub
+3. Click: "Add New..." → "Project"
+4. Importar: habity-web
+5. Click: "Deploy"
+6. ✅ Espera 1-2 minutos
+
+
+🌐 PASO 5: CONECTAR DOMINIO EN VERCEL
+───────────────────────────────────────────
+1. Vercel Dashboard → Settings → Domains
+2. Add Domain: tuhabity.com
+3. Vercel te mostrará los nameservers
+
+
+📡 PASO 6: CONFIGURAR DNS EN NAMECHEAP
+───────────────────────────────────────────
+OPCIÓN A: NAMESERVERS (RECOMENDADO)
+────────────────────────────────────
+1. Login: https://namecheap.com
+2. Domain List → tuhabity.com → Manage
+3. Nameservers → Custom DNS
+4. Añadir:
+   ns1.vercel-dns.com
+   ns2.vercel-dns.com
+5. Save ✓
+
+
+OPCIÓN B: DNS RECORDS (ALTERNATIVA)
+────────────────────────────────────
+1. Domain List → tuhabity.com → Manage
+2. Advanced DNS → Add New Record
+
+Record 1:
+Type: A Record
+Host: @
+Value: 76.76.21.21
+TTL: Automatic
+
+Record 2:
+Type: CNAME Record
+Host: www
+Value: cname.vercel-dns.com
+TTL: Automatic
+
+3. Save All Changes
+
+
+⏰ PASO 7: ESPERAR PROPAGACIÓN
+───────────────────────────────────────────
+Tiempo: 30 minutos - 2 horas
+
+Comprobar en: https://dnschecker.org
+Buscar: tuhabity.com
+
+
+✅ PASO 8: VERIFICAR
+───────────────────────────────────────────
+Abrir: https://tuhabity.com
+Ver candado 🔒 → SSL activo
+Ver landing page → ¡Funciona!
+
+
+🎉 ¡LISTO!
+───────────────────────────────────────────
+Tu web está en: https://tuhabity.com
+
+
+═══════════════════════════════════════════
+COMANDOS ÚTILES ADICIONALES
+═══════════════════════════════════════════
+
+📝 VER STATUS DE GIT
+───────────────────────────────────────────
+git status
+
+
+🔄 ACTUALIZAR DESPUÉS DE CAMBIOS
+───────────────────────────────────────────
+git add .
+git commit -m "Descripción de los cambios"
+git push
+
+
+📦 INSTALAR DEPENDENCIAS LOCALMENTE
+───────────────────────────────────────────
+npm install
+
+
+🚀 EJECUTAR EN DESARROLLO LOCAL
+───────────────────────────────────────────
+npm run dev
+# Abrir: http://localhost:3000
+
+
+🏗️ BUILD DE PRODUCCIÓN (PROBAR LOCALMENTE)
+───────────────────────────────────────────
+npm run build
+npm start
+
+
+📊 VERIFICAR VELOCIDAD
+───────────────────────────────────────────
+https://pagespeed.web.dev
+Analizar: https://tuhabity.com
+
+
+🔍 VERIFICAR DNS
+───────────────────────────────────────────
+https://dnschecker.org
+
+
+═══════════════════════════════════════════
+TROUBLESHOOTING
+═══════════════════════════════════════════
+
+❌ "Git pide password"
+───────────────────────────────────────────
+No uses tu contraseña normal.
+Crear Personal Access Token:
+https://github.com/settings/tokens
+Scopes: Marcar "repo"
+
+
+❌ "DNS no propaga"
+───────────────────────────────────────────
+1. Verificar nameservers en Namecheap
+2. Esperar más tiempo (hasta 48h máximo)
+3. Limpiar caché DNS:
+   Windows: ipconfig /flushdns
+   Mac: sudo dscacheutil -flushcache
+   Linux: sudo systemd-resolve --flush-caches
+
+
+❌ "SSL no se activa"
+───────────────────────────────────────────
+1. Esperar 30 minutos más
+2. Vercel → Domains → Renew SSL Certificate
+3. Verificar DNS apunta correctamente
+
+
+═══════════════════════════════════════════
+SOPORTE
+═══════════════════════════════════════════
+
+Vercel:
+  Chat: https://vercel.com/help
+  Docs: https://vercel.com/docs
+
+Namecheap:
+  Chat: 24/7 en web
+  Support: https://support.namecheap.com
+
+GitHub:
+  Docs: https://docs.github.com
+
+
+═══════════════════════════════════════════
+¡ÉXITO CON tuhabity.com! 🚀🏠
+═══════════════════════════════════════════
