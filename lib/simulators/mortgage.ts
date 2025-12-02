@@ -1,149 +1,175 @@
-// Utilidades para cálculo de hipoteca
+/**
+ * Simulador de Hipoteca
+ * tuHabity.com - Calculadora de Cuota Hipotecaria
+ */
 
-export interface MortgageInputs {
-  propertyPrice: number        // Precio de la vivienda
-  downPayment: number          // Entrada (€)
-  downPaymentPercentage: number // Entrada (%)
-  loanAmount: number           // Cantidad a financiar
-  interestRate: number         // TIN - Tipo de interés (%)
-  years: number                // Plazo (años)
+export interface MortgageSimulationParams {
+  propertyPrice: number;
+  downPayment: number;
+  interestRate: number;
+  termYears: number;
 }
 
-export interface MortgageResults {
-  monthlyPayment: number       // Cuota mensual
-  totalInterest: number        // Intereses totales
-  totalAmount: number          // Cantidad total a pagar
-  annualPayment: number        // Pago anual
-  payments: PaymentDetail[]    // Detalle de pagos por año
-}
-
-export interface PaymentDetail {
-  year: number
-  principal: number            // Capital amortizado
-  interest: number             // Intereses pagados
-  remainingBalance: number     // Capital pendiente
-  cumulativeInterest: number   // Intereses acumulados
+export interface MortgageSimulationResult {
+  loanAmount: number;
+  monthlyPayment: number;
+  totalPayment: number;
+  totalInterest: number;
+  ltv: number; // Loan-to-Value ratio (%)
 }
 
 /**
- * Calcula la cuota mensual de una hipoteca usando la fórmula francesa
+ * Calcula la cuota mensual de una hipoteca usando la fórmula de anualidad
+ * Fórmula: M = P * [i(1 + i)^n] / [(1 + i)^n - 1]
+ * 
+ * M = Cuota mensual
+ * P = Principal (cantidad prestada)
+ * i = Tasa de interés mensual (anual / 12 / 100)
+ * n = Número de pagos (años * 12)
  */
-export function calculateMonthlyPayment(
-  loanAmount: number,
-  annualInterestRate: number,
-  years: number
-): number {
-  if (loanAmount <= 0 || years <= 0) return 0
-  
-  // Si el interés es 0, simplemente dividir el préstamo entre meses
-  if (annualInterestRate === 0) {
-    return loanAmount / (years * 12)
+export function calculateMortgage(params: MortgageSimulationParams): MortgageSimulationResult {
+  const { propertyPrice, downPayment, interestRate, termYears } = params;
+
+  // Cantidad a financiar
+  const loanAmount = propertyPrice - downPayment;
+
+  // Si no hay préstamo, retornar valores en 0
+  if (loanAmount <= 0) {
+    return {
+      loanAmount: 0,
+      monthlyPayment: 0,
+      totalPayment: downPayment,
+      totalInterest: 0,
+      ltv: 0,
+    };
   }
 
-  const monthlyRate = annualInterestRate / 100 / 12
-  const numberOfPayments = years * 12
+  // Tasa de interés mensual (decimal)
+  const monthlyRate = interestRate / 100 / 12;
   
-  // Fórmula: M = P * [i(1 + i)^n] / [(1 + i)^n - 1]
-  const factor = Math.pow(1 + monthlyRate, numberOfPayments)
-  const monthlyPayment = loanAmount * (monthlyRate * factor) / (factor - 1)
+  // Número de pagos mensuales
+  const numPayments = termYears * 12;
+
+  // Calcular cuota mensual usando la fórmula de anualidad
+  let monthlyPayment: number;
   
-  return monthlyPayment
+  if (monthlyRate === 0) {
+    // Si el interés es 0%, la cuota es simplemente el préstamo dividido entre los pagos
+    monthlyPayment = loanAmount / numPayments;
+  } else {
+    // Fórmula de anualidad: M = P * [i(1 + i)^n] / [(1 + i)^n - 1]
+    const numerator = monthlyRate * Math.pow(1 + monthlyRate, numPayments);
+    const denominator = Math.pow(1 + monthlyRate, numPayments) - 1;
+    monthlyPayment = loanAmount * (numerator / denominator);
+  }
+
+  // Total pagado durante toda la hipoteca
+  const totalPayment = monthlyPayment * numPayments;
+
+  // Total de intereses pagados
+  const totalInterest = totalPayment - loanAmount;
+
+  // LTV (Loan-to-Value): Porcentaje financiado sobre el valor de la propiedad
+  const ltv = (loanAmount / propertyPrice) * 100;
+
+  return {
+    loanAmount,
+    monthlyPayment: Math.round(monthlyPayment * 100) / 100, // Redondear a 2 decimales
+    totalPayment: Math.round(totalPayment * 100) / 100,
+    totalInterest: Math.round(totalInterest * 100) / 100,
+    ltv: Math.round(ltv * 100) / 100,
+  };
 }
 
 /**
- * Calcula el desglose completo de la hipoteca
+ * Valida los parámetros de entrada
  */
-export function calculateMortgage(inputs: MortgageInputs): MortgageResults {
-  const monthlyPayment = calculateMonthlyPayment(
-    inputs.loanAmount,
-    inputs.interestRate,
-    inputs.years
-  )
-  
-  const numberOfPayments = inputs.years * 12
-  const totalAmount = monthlyPayment * numberOfPayments
-  const totalInterest = totalAmount - inputs.loanAmount
-  const annualPayment = monthlyPayment * 12
+export function validateMortgageParams(params: MortgageSimulationParams): {
+  valid: boolean;
+  errors: string[];
+} {
+  const errors: string[] = [];
 
-  // Calcular tabla de amortización por años
-  const payments: PaymentDetail[] = []
-  let remainingBalance = inputs.loanAmount
-  let cumulativeInterest = 0
-  const monthlyRate = inputs.interestRate / 100 / 12
+  if (params.propertyPrice < 10000) {
+    errors.push('El precio de la vivienda debe ser al menos 10.000€');
+  }
 
-  for (let year = 1; year <= inputs.years; year++) {
-    let yearlyPrincipal = 0
-    let yearlyInterest = 0
+  if (params.propertyPrice > 10000000) {
+    errors.push('El precio de la vivienda no puede superar 10.000.000€');
+  }
 
-    // Calcular 12 meses
-    for (let month = 1; month <= 12; month++) {
-      if (remainingBalance <= 0) break
+  if (params.downPayment < 0) {
+    errors.push('La entrada no puede ser negativa');
+  }
 
-      const interestPayment = remainingBalance * monthlyRate
-      const principalPayment = monthlyPayment - interestPayment
+  if (params.downPayment > params.propertyPrice) {
+    errors.push('La entrada no puede ser mayor que el precio de la vivienda');
+  }
 
-      yearlyPrincipal += principalPayment
-      yearlyInterest += interestPayment
-      remainingBalance -= principalPayment
-      cumulativeInterest += interestPayment
-    }
+  if (params.interestRate < 0) {
+    errors.push('El tipo de interés no puede ser negativo');
+  }
 
-    payments.push({
-      year,
-      principal: yearlyPrincipal,
-      interest: yearlyInterest,
-      remainingBalance: Math.max(0, remainingBalance),
-      cumulativeInterest,
-    })
+  if (params.interestRate > 20) {
+    errors.push('El tipo de interés no puede superar el 20%');
+  }
 
-    if (remainingBalance <= 0) break
+  if (params.termYears < 1) {
+    errors.push('El plazo debe ser al menos 1 año');
+  }
+
+  if (params.termYears > 50) {
+    errors.push('El plazo no puede superar los 50 años');
   }
 
   return {
-    monthlyPayment,
-    totalInterest,
-    totalAmount,
-    annualPayment,
-    payments,
+    valid: errors.length === 0,
+    errors,
+  };
+}
+
+/**
+ * Calcula la tabla de amortización (opcional, para features futuras)
+ */
+export interface AmortizationEntry {
+  month: number;
+  payment: number;
+  principal: number;
+  interest: number;
+  balance: number;
+}
+
+export function calculateAmortizationSchedule(
+  params: MortgageSimulationParams
+): AmortizationEntry[] {
+  const { propertyPrice, downPayment, interestRate, termYears } = params;
+  const loanAmount = propertyPrice - downPayment;
+  const monthlyRate = interestRate / 100 / 12;
+  const numPayments = termYears * 12;
+
+  // Calcular cuota mensual
+  const result = calculateMortgage(params);
+  const monthlyPayment = result.monthlyPayment;
+
+  const schedule: AmortizationEntry[] = [];
+  let balance = loanAmount;
+
+  for (let month = 1; month <= numPayments; month++) {
+    const interestPayment = balance * monthlyRate;
+    const principalPayment = monthlyPayment - interestPayment;
+    balance -= principalPayment;
+
+    // Asegurar que el balance no sea negativo en el último pago
+    if (balance < 0) balance = 0;
+
+    schedule.push({
+      month,
+      payment: Math.round(monthlyPayment * 100) / 100,
+      principal: Math.round(principalPayment * 100) / 100,
+      interest: Math.round(interestPayment * 100) / 100,
+      balance: Math.round(balance * 100) / 100,
+    });
   }
-}
 
-/**
- * Calcula el porcentaje de entrada dado el monto
- */
-export function calculateDownPaymentPercentage(
-  downPayment: number,
-  propertyPrice: number
-): number {
-  if (propertyPrice <= 0) return 0
-  return (downPayment / propertyPrice) * 100
-}
-
-/**
- * Calcula el monto de entrada dado el porcentaje
- */
-export function calculateDownPaymentAmount(
-  percentage: number,
-  propertyPrice: number
-): number {
-  return (percentage / 100) * propertyPrice
-}
-
-/**
- * Formatea cantidad en euros
- */
-export function formatCurrency(amount: number): string {
-  return new Intl.NumberFormat('es-ES', {
-    style: 'currency',
-    currency: 'EUR',
-    minimumFractionDigits: 0,
-    maximumFractionDigits: 0,
-  }).format(amount)
-}
-
-/**
- * Formatea porcentaje
- */
-export function formatPercentage(value: number, decimals: number = 2): string {
-  return `${value.toFixed(decimals)}%`
+  return schedule;
 }
