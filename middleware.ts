@@ -1,99 +1,49 @@
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
-import { getToken } from 'next-auth/jwt'
 
-// Rutas que requieren autenticación
-const PROTECTED_ROUTES = [
-  '/dashboard',
-  '/profile',
-  '/settings',
-  '/simulators',
-  '/properties',
-  '/reports',
-  '/admin',
-  '/app',
-]
-
-// Rutas que requieren roles específicos
-const ADMIN_ROUTES = [
-  '/admin',
-]
+// Deshabilitar Edge Runtime para este middleware
+export const runtime = 'nodejs'
 
 // Rutas públicas (no requieren autenticación)
 const PUBLIC_ROUTES = [
   '/',
-  '/auth/login',
-  '/auth/register',
-  '/auth/verify-email',
-  '/auth/forgot-password',
-  '/auth/reset-password',
+  '/auth',
   '/pricing',
   '/contact',
   '/privacy',
   '/terms',
+  '/api/auth',
 ]
 
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl
   
-  // Skip archivos estáticos y API de auth
+  // Skip archivos estáticos
   if (
     pathname.startsWith('/_next') ||
     pathname.startsWith('/api/auth') ||
-    pathname.startsWith('/api/public') ||
     pathname.includes('.')
   ) {
     return NextResponse.next()
   }
 
-  // Verificar rutas públicas primero
-  if (PUBLIC_ROUTES.some(route => pathname === route || pathname.startsWith(route))) {
+  // Permitir rutas públicas
+  const isPublicRoute = PUBLIC_ROUTES.some(route => 
+    pathname === route || pathname.startsWith(route)
+  )
+  
+  if (isPublicRoute) {
     return NextResponse.next()
   }
 
-  // Para rutas protegidas, verificar autenticación
-  if (PROTECTED_ROUTES.some(route => pathname.startsWith(route))) {
-    try {
-      const token = await getToken({ 
-        req: request,
-        secret: process.env.NEXTAUTH_SECRET 
-      })
+  // Para rutas protegidas, verificar cookie de sesión
+  const sessionToken = request.cookies.get('next-auth.session-token') || 
+                       request.cookies.get('__Secure-next-auth.session-token')
 
-      if (!token) {
-        const loginUrl = new URL('/auth/login', request.url)
-        loginUrl.searchParams.set('callbackUrl', pathname)
-        return NextResponse.redirect(loginUrl)
-      }
-
-      // Verificar estado de usuario
-      if (!token.isActive) {
-        return NextResponse.redirect(new URL('/auth/account-suspended', request.url))
-      }
-
-      // Verificar email verificado
-      if (!token.emailVerified && !pathname.startsWith('/auth/verify-email')) {
-        return NextResponse.redirect(new URL('/auth/verify-email', request.url))
-      }
-
-      // Verificar onboarding
-      if (!token.onboardingCompleted && 
-          !pathname.startsWith('/onboarding') && 
-          !pathname.startsWith('/auth')) {
-        return NextResponse.redirect(new URL('/onboarding', request.url))
-      }
-
-      // Verificar permisos de admin
-      if (ADMIN_ROUTES.some(route => pathname.startsWith(route))) {
-        if (token.role !== 'ADMIN' && token.role !== 'MODERATOR') {
-          return NextResponse.redirect(new URL('/403', request.url))
-        }
-      }
-    } catch (error) {
-      console.error('Middleware auth error:', error)
-      const loginUrl = new URL('/auth/login', request.url)
-      loginUrl.searchParams.set('callbackUrl', pathname)
-      return NextResponse.redirect(loginUrl)
-    }
+  if (!sessionToken) {
+    const loginUrl = new URL('/auth/login', request.url)
+    loginUrl.searchParams.set('callbackUrl', pathname)
+    return NextResponse.redirect(loginUrl)
   }
 
   // Headers de seguridad
@@ -108,6 +58,6 @@ export async function middleware(request: NextRequest) {
 
 export const config = {
   matcher: [
-    '/((?!_next/static|_next/image|favicon.ico).*)',
+    '/((?!_next/static|_next/image|favicon.ico|api/auth).*)',
   ],
 }
