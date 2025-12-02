@@ -1,0 +1,554 @@
+// Schema de base de datos para tuHabity.com
+// Incluye: Autenticación, Usuarios, Simuladores Inmobiliarios, Propiedades
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ========================================
+// AUTENTICACIÓN (NextAuth.js)
+// ========================================
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+  @@map("accounts")
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("sessions")
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+  @@map("verificationtokens")
+}
+
+// ========================================
+// USUARIOS Y ROLES
+// ========================================
+
+enum UserRole {
+  ADMIN           // Administrador del sistema
+  MODERATOR       // Moderador/Soporte
+  USER            // Usuario estándar
+  PREMIUM_USER    // Usuario premium
+  BUSINESS_USER   // Usuario business/empresarial
+}
+
+enum UserStatus {
+  ACTIVE          // Cuenta activa
+  INACTIVE        // Cuenta inactiva
+  SUSPENDED       // Cuenta suspendida
+  PENDING         // Pendiente de verificación
+  BANNED          // Cuenta bloqueada permanentemente
+}
+
+model User {
+  id            String      @id @default(cuid())
+  email         String      @unique
+  emailVerified DateTime?
+  name          String?
+  image         String?
+  
+  // Credenciales locales
+  password      String?     // Hash bcrypt para login local
+  
+  // Información del perfil
+  firstName     String?
+  lastName      String?
+  phone         String?
+  dateOfBirth   DateTime?
+  bio           String?     @db.Text
+  
+  // Configuración de cuenta
+  role          UserRole    @default(USER)
+  status        UserStatus  @default(PENDING)
+  isActive      Boolean     @default(true)
+  isVerified    Boolean     @default(false)
+  
+  // Configuración de usuario
+  timezone      String      @default("UTC")
+  language      String      @default("es")
+  theme         String      @default("system") // light, dark, system
+  notifications Boolean     @default(true)
+  
+  // Marketing y comunicaciones
+  marketingEmails    Boolean @default(false)
+  productUpdates     Boolean @default(true)
+  weeklyDigest       Boolean @default(true)
+  
+  // Seguridad
+  twoFactorEnabled   Boolean @default(false)
+  twoFactorSecret    String?
+  backupCodes        Json?   // Array de códigos de respaldo
+  
+  // Auditoría y seguimiento
+  lastLoginAt        DateTime?
+  lastActiveAt       DateTime?
+  loginAttempts      Int      @default(0)
+  lockedUntil        DateTime?
+  passwordChangedAt  DateTime?
+  
+  // Onboarding
+  onboardingCompleted Boolean @default(false)
+  onboardingStep      Int     @default(0)
+  
+  // Relaciones NextAuth
+  accounts      Account[]
+  sessions      Session[]
+  
+  // Relaciones del sistema
+  subscription  Subscription?
+  auditLogs     AuditLog[]
+  userTokens    UserToken[]
+  
+  // Relaciones específicas de la app inmobiliaria
+  properties    Property[]
+  simulations   Simulation[]
+  reports       Report[]
+  notifications UserNotification[]
+  
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  deletedAt     DateTime? // Soft delete
+
+  @@map("users")
+}
+
+// ========================================
+// SISTEMA DE SUSCRIPCIONES
+// ========================================
+
+enum SubscriptionPlan {
+  LLAVE           // Gratuito
+  ESCRITURA       // 7.99€/mes
+  NOTARIA         // 15.99€/mes
+  ENTERPRISE      // Personalizado
+}
+
+enum SubscriptionStatus {
+  ACTIVE
+  CANCELED
+  PAST_DUE
+  UNPAID
+  INCOMPLETE
+  TRIALING
+}
+
+model Subscription {
+  id              String             @id @default(cuid())
+  
+  // Usuario
+  userId          String             @unique
+  user            User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  // Plan y estado
+  plan            SubscriptionPlan   @default(LLAVE)
+  status          SubscriptionStatus @default(ACTIVE)
+  
+  // Fechas
+  startedAt       DateTime           @default(now())
+  expiresAt       DateTime?
+  trialEndsAt     DateTime?
+  canceledAt      DateTime?
+  
+  // Información de pago (Stripe/PayPal)
+  stripeCustomerId       String?
+  stripeSubscriptionId   String?
+  stripePriceId          String?
+  
+  // Límites y uso mensual
+  propertiesUsed         Int @default(0)
+  simulationsUsed        Int @default(0) 
+  reportsGenerated       Int @default(0)
+  usageReset             DateTime @default(now())
+  
+  createdAt       DateTime           @default(now())
+  updatedAt       DateTime           @updatedAt
+
+  @@map("subscriptions")
+}
+
+// ========================================
+// PROPIEDADES INMOBILIARIAS  
+// ========================================
+
+enum PropertyType {
+  PISO
+  CASA
+  CHALET
+  ATICO
+  ESTUDIO
+  DUPLEX
+  LOCAL
+  OFICINA
+  NAVE
+  TERRENO
+  GARAJE
+  TRASTERO
+}
+
+enum PropertyStatus {
+  EN_VENTA
+  VENDIDO
+  RETIRADO
+  RESERVADO
+}
+
+model Property {
+  id          String        @id @default(cuid())
+  
+  // Usuario que guardó la propiedad
+  userId      String
+  user        User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  // Información básica
+  title       String
+  description String?       @db.Text
+  price       Float
+  type        PropertyType
+  status      PropertyStatus @default(EN_VENTA)
+  
+  // Ubicación
+  address     String
+  city        String
+  province    String
+  postalCode  String?
+  country     String        @default("España")
+  latitude    Float?
+  longitude   Float?
+  
+  // Características
+  bedrooms    Int?
+  bathrooms   Int?
+  surface     Float?        // m²
+  plotSize    Float?        // m² parcela
+  yearBuilt   Int?
+  energyRating String?      // A, B, C, D, E, F, G
+  
+  // Información financiera
+  communityFees   Float?    // Gastos comunidad
+  ibiTax          Float?    // IBI anual
+  
+  // Metadatos
+  sourceUrl       String?   // URL original
+  sourceAgency    String?   // Inmobiliaria origen
+  images          Json?     // Array de URLs de imágenes
+  features        Json?     // Array de características
+  
+  // Análisis
+  isAnalyzed      Boolean   @default(false)
+  analysisData    Json?     // Datos de análisis financiero
+  
+  // Relaciones
+  simulations     Simulation[]
+  
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  
+  @@map("properties")
+}
+
+// ========================================
+// SIMULADORES FINANCIEROS
+// ========================================
+
+enum SimulationType {
+  HIPOTECA          // Calculadora de hipoteca
+  GASTOS_COMPRA     // Gastos de compraventa
+  RENTABILIDAD      // ROI de inversión
+  RATIO_ENDEUDAMIENTO // Ratio de endeudamiento
+  AHORRO_OBJETIVO   // Calculadora de ahorro
+  COMPARADOR        // Comparar propiedades
+}
+
+model Simulation {
+  id          String         @id @default(cuid())
+  
+  // Usuario
+  userId      String
+  user        User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  // Propiedad asociada (opcional)
+  propertyId  String?
+  property    Property?      @relation(fields: [propertyId], references: [id], onDelete: SetNull)
+  
+  // Información de la simulación
+  type        SimulationType
+  name        String         // Nombre personalizado
+  
+  // Datos de entrada (JSON flexible)
+  inputData   Json
+  
+  // Resultados calculados
+  results     Json
+  
+  // Metadatos
+  notes       String?        @db.Text
+  isPublic    Boolean        @default(false)
+  isFavorite  Boolean        @default(false)
+  
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+  
+  @@map("simulations")
+}
+
+// ========================================
+// REPORTES
+// ========================================
+
+enum ReportType {
+  DOSSIER_BANCARIO     // Dossier para banco
+  ANALISIS_INVERSION   // Análisis de inversión
+  COMPARATIVA          // Comparativa de propiedades
+  RESUMEN_FINANCIERO   // Resumen financiero personal
+}
+
+model Report {
+  id          String      @id @default(cuid())
+  
+  // Usuario
+  userId      String
+  user        User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  // Información del reporte
+  type        ReportType
+  title       String
+  
+  // Contenido
+  data        Json        // Datos del reporte
+  generatedPdf String?    // URL del PDF generado
+  
+  // Estado
+  isGenerated Boolean     @default(false)
+  generatedAt DateTime?
+  
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+  
+  @@map("reports")
+}
+
+// ========================================
+// AUDITORÍA Y LOGS
+// ========================================
+
+enum AuditAction {
+  // Autenticación
+  LOGIN
+  LOGOUT
+  REGISTER
+  PASSWORD_CHANGE
+  PASSWORD_RESET
+  EMAIL_VERIFY
+  ACCOUNT_LOCK
+  ACCOUNT_UNLOCK
+  
+  // Propiedades
+  PROPERTY_CREATE
+  PROPERTY_UPDATE
+  PROPERTY_DELETE
+  PROPERTY_VIEW
+  
+  // Simulaciones
+  SIMULATION_CREATE
+  SIMULATION_UPDATE
+  SIMULATION_DELETE
+  SIMULATION_RUN
+  
+  // Reportes
+  REPORT_GENERATE
+  REPORT_DOWNLOAD
+  
+  // Suscripciones
+  SUBSCRIPTION_CREATE
+  SUBSCRIPTION_UPDATE
+  SUBSCRIPTION_CANCEL
+  
+  // Admin
+  USER_PROMOTE
+  USER_DEMOTE
+  USER_SUSPEND
+  USER_DELETE
+}
+
+model AuditLog {
+  id          String      @id @default(cuid())
+  
+  // Usuario que realizó la acción
+  userId      String?
+  user        User?       @relation(fields: [userId], references: [id], onDelete: SetNull)
+  
+  // Detalles de la acción
+  action      AuditAction
+  resource    String?     // Recurso afectado
+  resourceId  String?     // ID del recurso
+  
+  // Metadatos
+  details     Json?       // Detalles adicionales
+  ipAddress   String?
+  userAgent   String?
+  
+  // Resultado
+  success     Boolean     @default(true)
+  errorMessage String?
+  
+  createdAt   DateTime    @default(now())
+
+  @@map("audit_logs")
+}
+
+// ========================================
+// TOKENS Y VERIFICACIONES
+// ========================================
+
+enum TokenType {
+  EMAIL_VERIFICATION
+  PASSWORD_RESET
+  PHONE_VERIFICATION
+  ACCOUNT_ACTIVATION
+  TWO_FACTOR_SETUP
+}
+
+model UserToken {
+  id          String    @id @default(cuid())
+  
+  // Usuario
+  userId      String
+  
+  // Token
+  token       String    @unique
+  type        TokenType
+  
+  // Validez
+  expiresAt   DateTime
+  usedAt      DateTime?
+  
+  // Metadatos
+  ipAddress   String?
+  userAgent   String?
+  
+  createdAt   DateTime  @default(now())
+  
+  // Relación con usuario
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("user_tokens")
+}
+
+// ========================================
+// NOTIFICACIONES
+// ========================================
+
+enum NotificationType {
+  INFO
+  SUCCESS
+  WARNING
+  ERROR
+  MARKETING
+  PROPERTY_ALERT
+  PRICE_CHANGE
+  SIMULATION_READY
+  REPORT_READY
+}
+
+model UserNotification {
+  id          String            @id @default(cuid())
+  
+  // Usuario destinatario
+  userId      String
+  user        User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  // Contenido
+  title       String
+  message     String            @db.Text
+  type        NotificationType  @default(INFO)
+  
+  // Estado
+  read        Boolean           @default(false)
+  sent        Boolean           @default(false)
+  
+  // Metadatos
+  data        Json?             // Datos adicionales
+  actionUrl   String?           // URL de acción
+  
+  // Programación
+  scheduledFor DateTime?
+  sentAt       DateTime?
+  readAt       DateTime?
+  
+  createdAt    DateTime         @default(now())
+
+  @@map("notifications")
+}
+
+// ========================================
+// CONFIGURACIÓN DEL SISTEMA
+// ========================================
+
+model SystemConfig {
+  id          String   @id @default(cuid())
+  key         String   @unique
+  value       Json
+  description String?
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("system_config")
+}
+
+// ========================================
+// ÍNDICES PARA OPTIMIZACIÓN
+// ========================================
+
+// Usuarios
+// @@index([email])
+// @@index([status, isActive])
+// @@index([role])
+
+// Propiedades
+// @@index([userId])
+// @@index([city, province])
+// @@index([type, status])
+// @@index([price])
+
+// Simulaciones
+// @@index([userId, type])
+// @@index([createdAt])
+
+// Audit Logs
+// @@index([userId, createdAt])
+// @@index([action, createdAt])
