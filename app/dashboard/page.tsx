@@ -2,6 +2,7 @@ import { getServerSession } from 'next-auth'
 import { authOptions } from '../../lib/auth'
 import { redirect } from 'next/navigation'
 import { Home, Calculator, FileText, Settings, Users, BarChart3 } from 'lucide-react'
+import Link from 'next/link'
 
 export default async function DashboardPage() {
   const session = await getServerSession(authOptions)
@@ -73,26 +74,28 @@ export default async function DashboardPage() {
         {/* Quick Actions */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
           {/* Simuladores */}
-          <div className="bg-white rounded-lg shadow hover:shadow-md transition-shadow">
-            <div className="p-6">
-              <div className="flex items-center">
-                <div className="flex-shrink-0">
-                  <Calculator className="h-8 w-8 text-blue-600" />
+          <Link href="/simuladores">
+            <div className="bg-white rounded-lg shadow hover:shadow-md transition-shadow cursor-pointer">
+              <div className="p-6">
+                <div className="flex items-center">
+                  <div className="flex-shrink-0">
+                    <Calculator className="h-8 w-8 text-blue-600" />
+                  </div>
+                  <div className="ml-4">
+                    <h3 className="text-lg font-medium text-gray-900">Simuladores</h3>
+                    <p className="text-sm text-gray-600">
+                      Calcula hipotecas, gastos y rentabilidad
+                    </p>
+                  </div>
                 </div>
-                <div className="ml-4">
-                  <h3 className="text-lg font-medium text-gray-900">Simuladores</h3>
-                  <p className="text-sm text-gray-600">
-                    Calcula hipotecas, gastos y rentabilidad
-                  </p>
+                <div className="mt-4">
+                  <div className="w-full bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors text-center font-medium">
+                    Ir a Simuladores
+                  </div>
                 </div>
-              </div>
-              <div className="mt-4">
-                <button className="w-full bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors">
-                  Ir a Simuladores
-                </button>
               </div>
             </div>
-          </div>
+          </Link>
 
           {/* Propiedades */}
           <div className="bg-white rounded-lg shadow hover:shadow-md transition-shadow">
