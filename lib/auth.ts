@@ -1,28 +1,33 @@
-import NextAuth, { DefaultSession } from "next-auth"
+import NextAuth from "next-auth"
 import { PrismaAdapter } from "@auth/prisma-adapter"
 import GoogleProvider from "next-auth/providers/google"
 import CredentialsProvider from "next-auth/providers/credentials"
 import { prisma } from "./prisma"
 import { compare } from "bcryptjs"
+import type { NextAuthOptions } from "next-auth"
 
 // Extender tipos de NextAuth
 declare module "next-auth" {
-  interface Session extends DefaultSession {
+  interface Session {
     user: {
       id: string
       role: string
       emailVerified: Date | null
       isActive: boolean
       onboardingCompleted: boolean
+      email: string
+      name?: string | null
+      image?: string | null
       subscription?: {
         plan: string
         status: string
         expiresAt: Date | null
       }
-    } & DefaultSession["user"]
+    }
   }
 
   interface User {
+    id: string
     role: string
     emailVerified: Date | null
     isActive: boolean
@@ -37,6 +42,7 @@ declare module "next-auth" {
 
 declare module "next-auth/jwt" {
   interface JWT {
+    id: string
     role: string
     emailVerified: Date | null
     isActive: boolean
@@ -49,12 +55,7 @@ declare module "next-auth/jwt" {
   }
 }
 
-export const {
-  handlers: { GET, POST },
-  auth,
-  signIn,
-  signOut,
-} = NextAuth({
+export const authOptions: NextAuthOptions = {
   adapter: PrismaAdapter(prisma),
   session: {
     strategy: "jwt",
@@ -69,8 +70,8 @@ export const {
   providers: [
     // Proveedor de Google
     GoogleProvider({
-      clientId: process.env.GOOGLE_CLIENT_ID!,
-      clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
+      clientId: process.env.GOOGLE_CLIENT_ID || "",
+      clientSecret: process.env.GOOGLE_CLIENT_SECRET || "",
       allowDangerousEmailAccountLinking: true,
     }),
     
@@ -137,7 +138,7 @@ export const {
     })
   ],
   callbacks: {
-    async signIn({ user, account, profile }) {
+    async signIn({ user, account }) {
       // Permitir login con Google
       if (account?.provider === "google") {
         // Verificar si el usuario ya existe
@@ -156,9 +157,10 @@ export const {
       return true
     },
     
-    async jwt({ token, user }) {
+    async jwt({ token, user, trigger }) {
       // Primera vez que se crea el token
       if (user) {
+        token.id = user.id
         token.role = user.role
         token.emailVerified = user.emailVerified
         token.isActive = user.isActive
@@ -167,14 +169,14 @@ export const {
       }
 
       // Verificar si el usuario sigue activo en cada request
-      if (token.sub) {
+      if (token.id) {
         const dbUser = await prisma.user.findUnique({
-          where: { id: token.sub },
+          where: { id: token.id },
           include: { subscription: true }
         })
 
         if (!dbUser || !dbUser.isActive) {
-          return {} // Forzar logout
+          return {} as any // Forzar logout
         }
 
         // Actualizar datos del token si han cambiado
@@ -193,8 +195,8 @@ export const {
     },
     
     async session({ session, token }) {
-      if (token) {
-        session.user.id = token.sub!
+      if (token && session.user) {
+        session.user.id = token.id
         session.user.role = token.role
         session.user.emailVerified = token.emailVerified
         session.user.isActive = token.isActive
@@ -213,7 +215,7 @@ export const {
     }
   },
   events: {
-    async signIn({ user, account, profile, isNewUser }) {
+    async signIn({ user, account, isNewUser }) {
       console.log(`✅ Login exitoso: ${user.email} via ${account?.provider}`)
       
       // Si es un usuario nuevo de Google, configurar valores por defecto
@@ -243,21 +245,11 @@ export const {
         }).catch(console.error)
       }
     },
-    
-    async signOut({ session }) {
-      console.log(`👋 Logout: ${session?.user?.email}`)
-      
-      // Log de auditoría
-      if (session?.user?.id) {
-        await prisma.auditLog.create({
-          data: {
-            userId: session.user.id,
-            action: "LOGOUT",
-            details: {}
-          }
-        }).catch(console.error)
-      }
-    }
   },
   debug: process.env.NODE_ENV === "development",
-})
+}
+
+const handler = NextAuth(authOptions)
+
+export { handler as GET, handler as POST }
+export const auth = () => handler

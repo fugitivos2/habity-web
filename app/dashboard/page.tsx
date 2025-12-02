@@ -1,9 +1,10 @@
-import { auth } from '../../lib/auth'
+import { getServerSession } from 'next-auth'
+import { authOptions } from '../../lib/auth'
 import { redirect } from 'next/navigation'
 import { Home, Calculator, FileText, Settings, Users, BarChart3 } from 'lucide-react'
 
 export default async function DashboardPage() {
-  const session = await auth()
+  const session = await getServerSession(authOptions)
   
   if (!session?.user) {
     redirect('/auth/login')
@@ -46,7 +47,7 @@ export default async function DashboardPage() {
               <p className="text-sm font-medium text-gray-500">Rol</p>
               <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
                 user.role === 'ADMIN' ? 'bg-red-100 text-red-800' :
-                user.role === 'PREMIUM_USER' ? 'bg-gold-100 text-gold-800' :
+                user.role === 'PREMIUM_USER' ? 'bg-yellow-100 text-yellow-800' :
                 'bg-gray-100 text-gray-800'
               }`}>
                 {user.role}
@@ -159,7 +160,7 @@ export default async function DashboardPage() {
           </div>
         )}
 
-        {/* Stats Grid - Placeholder */}
+        {/* Stats Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           <div className="bg-white rounded-lg shadow p-6">
             <div className="flex items-center">
