@@ -101,7 +101,7 @@ model User {
   timezone      String      @default("UTC")
   language      String      @default("es")
   theme         String      @default("system") // light, dark, system
-  notifications Boolean     @default(true)
+  notificationsEnabled Boolean @default(true)
   
   // Marketing y comunicaciones
   marketingEmails    Boolean @default(false)
@@ -137,7 +137,7 @@ model User {
   properties    Property[]
   simulations   Simulation[]
   reports       Report[]
-  notifications UserNotification[]
+  userNotifications UserNotification[]
   
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
