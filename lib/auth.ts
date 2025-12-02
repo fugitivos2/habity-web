@@ -5,6 +5,7 @@ import CredentialsProvider from "next-auth/providers/credentials"
 import { prisma } from "./prisma"
 import { compare } from "bcryptjs"
 import type { NextAuthOptions } from "next-auth"
+import type { Adapter } from "next-auth/adapters"
 
 // Extender tipos de NextAuth
 declare module "next-auth" {
@@ -56,7 +57,7 @@ declare module "next-auth/jwt" {
 }
 
 export const authOptions: NextAuthOptions = {
-  adapter: PrismaAdapter(prisma),
+  adapter: PrismaAdapter(prisma) as Adapter,
   session: {
     strategy: "jwt",
     maxAge: 30 * 24 * 60 * 60, // 30 días
