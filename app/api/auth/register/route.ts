@@ -4,7 +4,10 @@ import bcrypt from 'bcryptjs'
 
 export async function POST(request: Request) {
   try {
-    const { name, email, password } = await request.json()
+    console.log('=== REGISTRO: Inicio ===')
+    const body = await request.json()
+    console.log('Body recibido:', { ...body, password: '***' })
+    const { name, email, password } = body
 
     // Validaciones
     if (!name || !email || !password) {
@@ -71,9 +74,11 @@ export async function POST(request: Request) {
       { status: 201 }
     )
   } catch (error: any) {
-    console.error('Register error:', error)
+    console.error('=== REGISTRO ERROR ===' )
+    console.error('Error completo:', error)
+    console.error('Stack:', error.stack)
     return NextResponse.json(
-      { error: 'Error interno del servidor' },
+      { error: error.message || 'Error interno del servidor' },
       { status: 500 }
     )
   }
