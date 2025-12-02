@@ -5,7 +5,6 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Slider } from '@/components/ui/slider';
-import { Button } from '@/components/ui/button';
 import { calculateMortgage } from '@/lib/simulators/mortgage';
 import type { MortgageSimulationParams, MortgageSimulationResult } from '@/lib/simulators/mortgage';
 import { Calculator, TrendingUp, Calendar, Percent, Home, Wallet } from 'lucide-react';
