@@ -26,13 +26,13 @@ export default function Header() {
 
           {/* Desktop Navigation */}
           <div className="hidden md:flex items-center gap-6">
-            <a href="#features" className="text-gray-700 hover:text-primary transition-colors">
+            <a href="#caracteristicas" className="text-gray-700 hover:text-primary transition-colors">
               Características
             </a>
             <a href="#simuladores" className="text-gray-700 hover:text-primary transition-colors">
               Simuladores
             </a>
-            <a href="#pricing" className="text-gray-700 hover:text-primary transition-colors">
+            <a href="#precios" className="text-gray-700 hover:text-primary transition-colors">
               Precios
             </a>
             <a href="#faq" className="text-gray-700 hover:text-primary transition-colors">
@@ -72,7 +72,7 @@ export default function Header() {
           <div className="md:hidden py-4 border-t border-gray-200">
             <div className="flex flex-col gap-4">
               <a
-                href="#features"
+                href="#caracteristicas"
                 className="text-gray-700 hover:text-primary transition-colors py-2"
                 onClick={() => setIsMenuOpen(false)}
               >
@@ -86,7 +86,7 @@ export default function Header() {
                 Simuladores
               </a>
               <a
-                href="#pricing"
+                href="#precios"
                 className="text-gray-700 hover:text-primary transition-colors py-2"
                 onClick={() => setIsMenuOpen(false)}
               >
