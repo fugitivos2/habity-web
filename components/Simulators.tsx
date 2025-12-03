@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { Home, Calculator, TrendingUp, PiggyBank } from 'lucide-react'
+import { Home, Calculator, TrendingUp, PiggyBank, AlertCircle } from 'lucide-react'
 import { motion } from 'framer-motion'
 
 // Tasas ITP por comunidad autónoma
@@ -33,8 +33,10 @@ export default function Simulators() {
     price: 250000,
     region: 'madrid',
     isNewProperty: false,
-    notaryRate: 0.5,
-    registryRate: 0.4,
+    notaryFee: 1250,
+    registryFee: 1000,
+    appraisalFee: 300,
+    agencyCommission: 0,
     gestorFee: 600
   })
 
@@ -48,8 +50,10 @@ export default function Simulators() {
   }
 
   const calculateExpenses = () => {
-    const notary = expenses.price * (expenses.notaryRate / 100)
-    const registry = expenses.price * (expenses.registryRate / 100)
+    const notary = expenses.notaryFee
+    const registry = expenses.registryFee
+    const appraisal = expenses.appraisalFee
+    const agency = expenses.agencyCommission
     const gestor = expenses.gestorFee
     
     let tax = 0
@@ -71,13 +75,15 @@ export default function Simulators() {
       taxName = `ITP (${regionData.rate}%)`
     }
     
-    const total = notary + registry + tax + gestor
+    const total = notary + registry + appraisal + tax + agency + gestor
     
     return {
       notary: notary.toFixed(0),
       registry: registry.toFixed(0),
+      appraisal: appraisal.toFixed(0),
       tax: tax.toFixed(0),
       taxName,
+      agency: agency.toFixed(0),
       gestor: gestor.toFixed(0),
       total: total.toFixed(0),
     }
@@ -327,50 +333,99 @@ export default function Simulators() {
               </div>
 
               {/* Gastos adicionales editables */}
-              <div className="space-y-3">
-                <div>
-                  <label className="block text-xs font-medium text-gray-600 mb-1">
-                    Notaría (%)
-                  </label>
-                  <input
-                    type="number"
-                    min="0"
-                    max="2"
-                    step="0.1"
-                    value={expenses.notaryRate}
-                    onChange={(e) => setExpenses({ ...expenses, notaryRate: parseFloat(e.target.value) || 0.5 })}
-                    className="w-20 px-3 py-1 border border-green-300 rounded text-sm font-medium focus:border-secondary focus:ring-1 focus:ring-secondary/20 outline-none"
-                  />
+              <div className="space-y-3 bg-gray-50 p-4 rounded-lg border border-gray-200">
+                <p className="text-xs font-semibold text-gray-600 uppercase mb-3">Gastos adicionales</p>
+                
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-xs font-medium text-gray-600 mb-1">
+                      Notaría
+                    </label>
+                    <div className="flex items-center gap-1">
+                      <input
+                        type="number"
+                        min="0"
+                        max="5000"
+                        step="50"
+                        value={expenses.notaryFee}
+                        onChange={(e) => setExpenses({ ...expenses, notaryFee: parseInt(e.target.value) || 0 })}
+                        className="w-full px-3 py-1.5 border border-gray-300 rounded text-sm font-medium focus:border-secondary focus:ring-1 focus:ring-secondary/20 outline-none"
+                      />
+                      <span className="text-xs text-gray-500">€</span>
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-medium text-gray-600 mb-1">
+                      Registro
+                    </label>
+                    <div className="flex items-center gap-1">
+                      <input
+                        type="number"
+                        min="0"
+                        max="5000"
+                        step="50"
+                        value={expenses.registryFee}
+                        onChange={(e) => setExpenses({ ...expenses, registryFee: parseInt(e.target.value) || 0 })}
+                        className="w-full px-3 py-1.5 border border-gray-300 rounded text-sm font-medium focus:border-secondary focus:ring-1 focus:ring-secondary/20 outline-none"
+                      />
+                      <span className="text-xs text-gray-500">€</span>
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-medium text-gray-600 mb-1">
+                      Tasación
+                    </label>
+                    <div className="flex items-center gap-1">
+                      <input
+                        type="number"
+                        min="0"
+                        max="2000"
+                        step="50"
+                        value={expenses.appraisalFee}
+                        onChange={(e) => setExpenses({ ...expenses, appraisalFee: parseInt(e.target.value) || 0 })}
+                        className="w-full px-3 py-1.5 border border-gray-300 rounded text-sm font-medium focus:border-secondary focus:ring-1 focus:ring-secondary/20 outline-none"
+                      />
+                      <span className="text-xs text-gray-500">€</span>
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-medium text-gray-600 mb-1">
+                      Gestoría
+                    </label>
+                    <div className="flex items-center gap-1">
+                      <input
+                        type="number"
+                        min="0"
+                        max="2000"
+                        step="50"
+                        value={expenses.gestorFee}
+                        onChange={(e) => setExpenses({ ...expenses, gestorFee: parseInt(e.target.value) || 0 })}
+                        className="w-full px-3 py-1.5 border border-gray-300 rounded text-sm font-medium focus:border-secondary focus:ring-1 focus:ring-secondary/20 outline-none"
+                      />
+                      <span className="text-xs text-gray-500">€</span>
+                    </div>
+                  </div>
                 </div>
 
                 <div>
                   <label className="block text-xs font-medium text-gray-600 mb-1">
-                    Registro (%)
+                    Comisión Inmobiliaria
                   </label>
-                  <input
-                    type="number"
-                    min="0"
-                    max="2"
-                    step="0.1"
-                    value={expenses.registryRate}
-                    onChange={(e) => setExpenses({ ...expenses, registryRate: parseFloat(e.target.value) || 0.4 })}
-                    className="w-20 px-3 py-1 border border-green-300 rounded text-sm font-medium focus:border-secondary focus:ring-1 focus:ring-secondary/20 outline-none"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-xs font-medium text-gray-600 mb-1">
-                    Gestoría (€)
-                  </label>
-                  <input
-                    type="number"
-                    min="0"
-                    max="2000"
-                    step="50"
-                    value={expenses.gestorFee}
-                    onChange={(e) => setExpenses({ ...expenses, gestorFee: parseInt(e.target.value) || 600 })}
-                    className="w-24 px-3 py-1 border border-green-300 rounded text-sm font-medium focus:border-secondary focus:ring-1 focus:ring-secondary/20 outline-none"
-                  />
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="number"
+                      min="0"
+                      max="50000"
+                      step="100"
+                      value={expenses.agencyCommission}
+                      onChange={(e) => setExpenses({ ...expenses, agencyCommission: parseInt(e.target.value) || 0 })}
+                      className="w-32 px-3 py-1.5 border border-gray-300 rounded text-sm font-medium focus:border-secondary focus:ring-1 focus:ring-secondary/20 outline-none"
+                    />
+                    <span className="text-xs text-gray-500">€ (opcional)</span>
+                  </div>
                 </div>
               </div>
 
@@ -384,9 +439,19 @@ export default function Simulators() {
                   <span className="text-lg font-bold text-gray-900">{expensesBreakdown.registry}€</span>
                 </div>
                 <div className="flex justify-between items-center">
+                  <span className="text-gray-600">Tasación:</span>
+                  <span className="text-lg font-bold text-gray-900">{expensesBreakdown.appraisal}€</span>
+                </div>
+                <div className="flex justify-between items-center">
                   <span className="text-gray-600">{expensesBreakdown.taxName}:</span>
                   <span className="text-lg font-bold text-gray-900">{expensesBreakdown.tax}€</span>
                 </div>
+                {parseInt(expensesBreakdown.agency) > 0 && (
+                  <div className="flex justify-between items-center">
+                    <span className="text-gray-600">Comisión Inmob.:</span>
+                    <span className="text-lg font-bold text-gray-900">{expensesBreakdown.agency}€</span>
+                  </div>
+                )}
                 <div className="flex justify-between items-center">
                   <span className="text-gray-600">Gestoría:</span>
                   <span className="text-lg font-bold text-gray-900">{expensesBreakdown.gestor}€</span>
@@ -398,6 +463,15 @@ export default function Simulators() {
                 <p className="text-sm text-gray-500">
                   Aproximadamente el {((parseInt(expensesBreakdown.total) / expenses.price) * 100).toFixed(1)}% del precio
                 </p>
+                
+                {/* Nota de cálculos estimados */}
+                <div className="mt-4 flex items-start gap-2 p-3 bg-amber-50 border border-amber-200 rounded-lg">
+                  <AlertCircle className="w-4 h-4 text-amber-600 mt-0.5 flex-shrink-0" />
+                  <p className="text-xs text-amber-800 leading-relaxed">
+                    <span className="font-semibold">Nota:</span> Los cálculos mostrados son estimados y pueden variar según cada caso particular. 
+                    Consulta con un profesional para obtener cifras exactas.
+                  </p>
+                </div>
               </div>
             </div>
           </motion.div>
