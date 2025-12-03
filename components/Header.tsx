@@ -25,7 +25,7 @@ export default function Header() {
           </div>
 
           {/* Desktop Navigation */}
-          <div className="hidden md:flex items-center gap-8">
+          <div className="hidden md:flex items-center gap-6">
             <a href="#features" className="text-gray-700 hover:text-primary transition-colors">
               Características
             </a>
@@ -38,9 +38,20 @@ export default function Header() {
             <a href="#faq" className="text-gray-700 hover:text-primary transition-colors">
               FAQ
             </a>
-            <button className="bg-primary hover:bg-primary-dark text-white px-6 py-2 rounded-lg font-medium transition-colors">
-              Acceder Beta
-            </button>
+            <div className="flex items-center gap-3">
+              <a
+                href="/login"
+                className="text-gray-700 hover:text-primary font-medium transition-colors px-4 py-2"
+              >
+                Accede
+              </a>
+              <a
+                href="/registro"
+                className="bg-primary hover:bg-primary-dark text-white px-6 py-2 rounded-lg font-medium transition-colors shadow-sm hover:shadow-md"
+              >
+                Regístrate
+              </a>
+            </div>
           </div>
 
           {/* Mobile menu button */}
@@ -88,9 +99,22 @@ export default function Header() {
               >
                 FAQ
               </a>
-              <button className="bg-primary hover:bg-primary-dark text-white px-6 py-3 rounded-lg font-medium transition-colors w-full">
-                Acceder Beta
-              </button>
+              <div className="flex flex-col gap-3 pt-2 border-t border-gray-200">
+                <a
+                  href="/login"
+                  className="text-center text-gray-700 hover:text-primary font-medium transition-colors py-2 border border-gray-300 rounded-lg"
+                  onClick={() => setIsMenuOpen(false)}
+                >
+                  Accede
+                </a>
+                <a
+                  href="/registro"
+                  className="text-center bg-primary hover:bg-primary-dark text-white px-6 py-3 rounded-lg font-medium transition-colors w-full"
+                  onClick={() => setIsMenuOpen(false)}
+                >
+                  Regístrate
+                </a>
+              </div>
             </div>
           </div>
         )}
