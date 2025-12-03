@@ -29,7 +29,7 @@ export default function Header() {
             <a href="#features" className="text-gray-700 hover:text-primary transition-colors">
               Características
             </a>
-            <a href="#simulators" className="text-gray-700 hover:text-primary transition-colors">
+            <a href="#simuladores" className="text-gray-700 hover:text-primary transition-colors">
               Simuladores
             </a>
             <a href="#pricing" className="text-gray-700 hover:text-primary transition-colors">
@@ -79,7 +79,7 @@ export default function Header() {
                 Características
               </a>
               <a
-                href="#simulators"
+                href="#simuladores"
                 className="text-gray-700 hover:text-primary transition-colors py-2"
                 onClick={() => setIsMenuOpen(false)}
               >
