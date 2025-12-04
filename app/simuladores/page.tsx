@@ -2,7 +2,8 @@ import { Metadata } from 'next';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import MortgageSimulator from '@/components/simulators/MortgageSimulator';
 import PurchaseCostsSimulator from '@/components/simulators/PurchaseCostsSimulator';
-import { Calculator, FileText, TrendingUp } from 'lucide-react';
+import DebtCapacitySimulator from '@/components/simulators/DebtCapacitySimulator';
+import { Calculator, FileText, TrendingUp, Wallet } from 'lucide-react';
 
 export const metadata: Metadata = {
   title: 'Simuladores Financieros | HABITY',
@@ -28,7 +29,7 @@ export default function SimulatorsPage() {
 
         {/* Tabs */}
         <Tabs defaultValue="mortgage" className="w-full">
-          <TabsList className="grid w-full max-w-3xl mx-auto grid-cols-2 mb-8 h-auto p-1">
+          <TabsList className="grid w-full max-w-5xl mx-auto grid-cols-3 mb-8 h-auto p-1">
             <TabsTrigger
               value="mortgage"
               className="flex items-center gap-2 py-3 text-base data-[state=active]:bg-blue-500 data-[state=active]:text-white"
@@ -43,6 +44,13 @@ export default function SimulatorsPage() {
               <FileText className="w-5 h-5" />
               <span className="hidden sm:inline">Gastos de</span> Compraventa
             </TabsTrigger>
+            <TabsTrigger
+              value="capacity"
+              className="flex items-center gap-2 py-3 text-base data-[state=active]:bg-purple-500 data-[state=active]:text-white"
+            >
+              <Wallet className="w-5 h-5" />
+              <span className="hidden sm:inline">Capacidad</span> Endeudamiento
+            </TabsTrigger>
           </TabsList>
 
           <TabsContent value="mortgage" className="mt-0">
@@ -51,6 +59,10 @@ export default function SimulatorsPage() {
 
           <TabsContent value="costs" className="mt-0">
             <PurchaseCostsSimulator />
+          </TabsContent>
+
+          <TabsContent value="capacity" className="mt-0">
+            <DebtCapacitySimulator />
           </TabsContent>
         </Tabs>
 
