@@ -581,68 +581,6 @@ export default function DebtCapacitySimulator() {
         </Card>
       </div>
 
-      {/* PARÁMETROS DEL PRÉSTAMO */}
-      <Card className="border-purple-200">
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Home className="w-5 h-5 text-purple-600" />
-            📈 Parámetros del Préstamo
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {/* Plazo */}
-            <div className="space-y-3">
-              <div className="flex items-center justify-between">
-                <Label>Plazo</Label>
-                <span className="text-lg font-bold text-purple-600">{years} años</span>
-              </div>
-              <Slider
-                value={[years]}
-                onValueChange={(value) => setYears(value[0])}
-                min={5}
-                max={40}
-                step={1}
-                className="w-full"
-              />
-              <Input
-                type="number"
-                value={years}
-                onChange={(e) => setYears(Number(e.target.value))}
-                min="5"
-                max="40"
-                className="w-20"
-              />
-            </div>
-
-            {/* Interés */}
-            <div className="space-y-3">
-              <div className="flex items-center justify-between">
-                <Label>Interés</Label>
-                <span className="text-lg font-bold text-purple-600">{interestRate}%</span>
-              </div>
-              <Slider
-                value={[interestRate]}
-                onValueChange={(value) => setInterestRate(value[0])}
-                min={0.5}
-                max={10}
-                step={0.1}
-                className="w-full"
-              />
-              <Input
-                type="number"
-                value={interestRate}
-                onChange={(e) => setInterestRate(Number(e.target.value))}
-                min="0.5"
-                max="10"
-                step="0.1"
-                className="w-20"
-              />
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-
       {/* RESULTADOS */}
       <Card className="border-blue-300 bg-gradient-to-br from-blue-50 to-green-50">
         <CardHeader>
