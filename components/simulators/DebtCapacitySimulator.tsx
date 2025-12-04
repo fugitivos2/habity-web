@@ -590,24 +590,7 @@ export default function DebtCapacitySimulator() {
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-6">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {/* LTV */}
-            <div className="space-y-3">
-              <div className="flex items-center justify-between">
-                <Label>LTV (Loan-to-Value)</Label>
-                <span className="text-lg font-bold text-purple-600">{ltv}%</span>
-              </div>
-              <Slider
-                value={[ltv]}
-                onValueChange={(value) => setLtv(value[0])}
-                min={50}
-                max={95}
-                step={5}
-                className="w-full"
-              />
-              <p className="text-xs text-gray-500">% del precio que financia el banco</p>
-            </div>
-
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {/* Plazo */}
             <div className="space-y-3">
               <div className="flex items-center justify-between">
