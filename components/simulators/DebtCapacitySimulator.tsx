@@ -59,15 +59,16 @@ export default function DebtCapacitySimulator() {
   const [debts, setDebts] = useState<Debt[]>([]);
 
   // PARÁMETROS PRÉSTAMO
-  const [ltv, setLtv] = useState(75);
-  const [years, setYears] = useState(30);
-  const [interestRate, setInterestRate] = useState(3.5);
+  const [ltv] = useState(75); // LTV fijo interno, no visible
+  const [years] = useState(30); // Fijo 30 años
+  const [interestRate] = useState(3.5); // Fijo 3.5%
 
   // CALCULADORA AHORRO
   const [currentSavings, setCurrentSavings] = useState(0);
   const [monthlySavings, setMonthlySavings] = useState(0);
 
   // CAPITAL INVERTIDO
+  const [propertyPrice, setPropertyPrice] = useState(200000); // NUEVO: Precio vivienda manual
   const [region, setRegion] = useState<Region>('Madrid');
   const [isNewProperty, setIsNewProperty] = useState(false);
   const [itpIva, setItpIva] = useState(0);
@@ -191,33 +192,33 @@ export default function DebtCapacitySimulator() {
     ));
   };
 
-  // Auto-calcular ITP/IVA cuando cambia región o tipo vivienda
+  // Auto-calcular ITP/IVA cuando cambia región, tipo vivienda o precio
   useEffect(() => {
-    if (results.maxPropertyPrice > 0) {
+    if (propertyPrice > 0) {
       const regionData = AUTONOMOUS_REGIONS[region];
       let calculatedTax = 0;
 
       if (isNewProperty) {
         // IVA 10% + AJD
-        const iva = results.maxPropertyPrice * 0.10;
-        const ajd = results.maxPropertyPrice * (regionData.ajdRate / 100);
+        const iva = propertyPrice * 0.10;
+        const ajd = propertyPrice * (regionData.ajdRate / 100);
         calculatedTax = iva + ajd;
       } else {
         // ITP
-        calculatedTax = results.maxPropertyPrice * (regionData.itpRate / 100);
+        calculatedTax = propertyPrice * (regionData.itpRate / 100);
       }
 
       setItpIva(Math.round(calculatedTax));
     }
-  }, [region, isNewProperty, results.maxPropertyPrice]);
+  }, [region, isNewProperty, propertyPrice]);
 
   useEffect(() => {
     calculateCapacity();
   }, [
-    netSalary, extraIncomes, debts, ltv, years, interestRate,
+    netSalary, extraIncomes, debts,
     currentSavings, monthlySavings, expectedRental,
     ibi, homeInsurance, community, maintenance, garbage, customExpenses,
-    region, isNewProperty, itpIva, notaryCost, registryCost, agencyCost, appraisalCost, initialCosts
+    region, isNewProperty, propertyPrice, itpIva, notaryCost, registryCost, agencyCost, appraisalCost, initialCosts
   ]);
 
   const calculateCapacity = () => {
@@ -256,9 +257,8 @@ export default function DebtCapacitySimulator() {
       loanAmount = maxMonthlyPayment * numPayments;
     }
 
-    // Con el LTV calculamos el precio total
-    const maxPropertyPrice = loanAmount / (ltv / 100);
-    const requiredDownPayment = maxPropertyPrice - loanAmount;
+    // Ya no calculamos precio máximo, usamos el precio manual del usuario
+    const requiredDownPayment = propertyPrice * ((100 - ltv) / 100);
 
     // CALCULADORA AHORRO
     let monthsToSave = 0;
@@ -294,13 +294,13 @@ export default function DebtCapacitySimulator() {
     let realGrossROI = 0;
     let realNetROI = 0;
 
-    if (maxPropertyPrice > 0 && expectedRental > 0) {
+    if (propertyPrice > 0 && expectedRental > 0) {
       const annualRental = expectedRental * 12;
       const netAnnualIncome = annualRental - totalAnnualExpenses;
       
       // ROI sobre precio total (tradicional)
-      grossROI = (annualRental / maxPropertyPrice) * 100;
-      netROI = (netAnnualIncome / maxPropertyPrice) * 100;
+      grossROI = (annualRental / propertyPrice) * 100;
+      netROI = (netAnnualIncome / propertyPrice) * 100;
       
       // ROI REAL sobre capital invertido
       if (totalCapitalInvested > 0) {
@@ -320,7 +320,7 @@ export default function DebtCapacitySimulator() {
       debtRatio: Math.round(debtRatio * 10) / 10,
       maxAdditionalLoan: Math.round(Math.max(0, maxAdditionalLoan)),
       maxMonthlyPayment: Math.round(maxMonthlyPayment),
-      maxPropertyPrice: Math.round(maxPropertyPrice),
+      maxPropertyPrice: Math.round(propertyPrice), // Ahora es el precio manual
       requiredDownPayment: Math.round(requiredDownPayment),
       loanAmount: Math.round(loanAmount),
       monthsToSave,
@@ -477,13 +477,13 @@ export default function DebtCapacitySimulator() {
                     </div>
                   </div>
 
-                  {/* % válido banco (solo si es alquiler) */}
-                  {income.type === 'rental' && (
-                    <div className="space-y-2 bg-white p-3 rounded border border-blue-300">
-                      <div className="flex items-center justify-between">
-                        <Label htmlFor={`income-percent-${income.id}`} className="text-xs">% válido para el banco</Label>
-                        <span className="text-sm font-bold text-blue-600">{income.bankPercent}%</span>
-                      </div>
+                  {/* % válido banco (siempre visible) */}
+                  <div className="space-y-2 bg-white p-3 rounded border border-blue-300">
+                    <div className="flex items-center justify-between">
+                      <Label htmlFor={`income-percent-${income.id}`} className="text-xs">% que computa para el banco</Label>
+                      <span className="text-sm font-bold text-blue-600">{income.bankPercent}%</span>
+                    </div>
+                    <div className="flex gap-2 items-center">
                       <Input
                         id={`income-percent-${income.id}`}
                         type="number"
@@ -493,12 +493,13 @@ export default function DebtCapacitySimulator() {
                         onChange={(e) => updateExtraIncome(income.id, 'bankPercent', Number(e.target.value))}
                         className="w-24"
                       />
-                      <div className="flex items-start gap-2 text-xs text-gray-600">
-                        <AlertCircle className="w-3 h-3 flex-shrink-0 mt-0.5" />
-                        <p>La mayoría de los bancos lo computan al 50%</p>
-                      </div>
+                      <span className="text-xs text-gray-500">%</span>
                     </div>
-                  )}
+                    <div className="flex items-start gap-2 text-xs text-gray-600 bg-blue-50 p-2 rounded">
+                      <AlertCircle className="w-3 h-3 flex-shrink-0 mt-0.5" />
+                      <p>Los bancos normalmente computan un <strong>50%</strong></p>
+                    </div>
+                  </div>
 
                   {/* Resumen calculado */}
                   <div className="text-xs text-gray-600 bg-white p-2 rounded">
@@ -692,23 +693,9 @@ export default function DebtCapacitySimulator() {
 
           <div className="space-y-4">
             <div className="bg-white p-6 rounded-lg shadow-md border-2 border-blue-300">
-              <p className="text-sm text-gray-600 mb-1">🏦 CUOTA MÁXIMA HIPOTECA</p>
+              <p className="text-sm text-gray-600 mb-1">🏦 CUOTA MÁXIMA DE NUEVO PRÉSTAMO O HIPOTECA</p>
               <p className="text-3xl font-bold text-blue-600">{formatCurrency(results.maxMonthlyPayment)} €/mes</p>
-              <p className="text-xs text-gray-500 mt-1">(40% de ingresos - deudas)</p>
-            </div>
-
-            <div className="bg-white p-6 rounded-lg shadow-md border-2 border-green-300">
-              <p className="text-sm text-gray-600 mb-1">🏠 PRECIO MÁXIMO VIVIENDA</p>
-              <p className="text-3xl font-bold text-green-600">{formatCurrency(results.maxPropertyPrice)} €</p>
-              <p className="text-xs text-gray-500 mt-1">
-                (con LTV {ltv}% y entrada {formatCurrency(results.requiredDownPayment)} €)
-              </p>
-            </div>
-
-            <div className="bg-white p-6 rounded-lg shadow-md border-2 border-orange-300">
-              <p className="text-sm text-gray-600 mb-1">💰 ENTRADA NECESARIA</p>
-              <p className="text-3xl font-bold text-orange-600">{formatCurrency(results.requiredDownPayment)} €</p>
-              <p className="text-xs text-gray-500 mt-1">({100 - ltv}% del precio)</p>
+              <p className="text-xs text-gray-500 mt-1">(40% de ingresos - deudas actuales)</p>
             </div>
           </div>
         </CardContent>
@@ -726,13 +713,22 @@ export default function DebtCapacitySimulator() {
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
-          {/* Entrada automática */}
-          <div className="bg-white p-4 rounded-lg border-2 border-orange-200">
-            <div className="flex justify-between items-center">
-              <span className="text-sm font-medium text-gray-700">Entrada ({100 - ltv}% LTV)</span>
-              <span className="text-xl font-bold text-orange-600">{formatCurrency(results.requiredDownPayment)} €</span>
+          {/* Precio de la vivienda - MANUAL */}
+          <div className="space-y-2">
+            <Label htmlFor="propertyPrice" className="font-semibold text-lg">Precio de la vivienda</Label>
+            <div className="flex gap-2">
+              <Input
+                id="propertyPrice"
+                type="number"
+                value={propertyPrice}
+                onChange={(e) => setPropertyPrice(Number(e.target.value))}
+                className="flex-1 text-lg font-semibold"
+                min="10000"
+                step="5000"
+              />
+              <span className="flex items-center px-3 bg-gray-100 rounded-md text-sm font-medium">€</span>
             </div>
-            <p className="text-xs text-gray-500 mt-1">Calculado automáticamente según LTV</p>
+            <p className="text-xs text-gray-500">Introduce el precio de la vivienda que quieres comprar</p>
           </div>
 
           <Separator />
@@ -920,6 +916,46 @@ export default function DebtCapacitySimulator() {
               ))}
             </div>
           </div>
+
+          <Separator />
+
+          {/* ROI EN GRANDE - NUEVO */}
+          {expectedRental > 0 && propertyPrice > 0 && (
+            <div className={`p-6 rounded-lg border-2 ${
+              results.realNetROI >= 6 
+                ? 'bg-gradient-to-r from-green-100 to-emerald-100 border-green-400'
+                : 'bg-gradient-to-r from-red-100 to-orange-100 border-red-400'
+            }`}>
+              <div className="text-center space-y-3">
+                <div className="flex items-center justify-center gap-3">
+                  <span className="text-5xl">{results.realNetROI >= 6 ? '🎯' : '⚠️'}</span>
+                  <div>
+                    <p className="text-sm font-medium text-gray-600">ROI NETO REAL (sobre capital invertido)</p>
+                    <p className={`text-6xl font-bold ${
+                      results.realNetROI >= 6 ? 'text-green-600' : 'text-red-600'
+                    }`}>
+                      {results.realNetROI}%
+                    </p>
+                  </div>
+                </div>
+                <div className={`p-3 rounded-lg ${
+                  results.realNetROI >= 6 ? 'bg-green-50' : 'bg-red-50'
+                }`}>
+                  <p className={`text-sm font-semibold ${
+                    results.realNetROI >= 6 ? 'text-green-800' : 'text-red-800'
+                  }`}>
+                    {results.realNetROI >= 6 
+                      ? '✅ ¡Excelente inversión! Un ROI superior al 6% se considera muy bueno en inmobiliario.'
+                      : '⚠️ ROI por debajo del 6%. Considera buscar mejores oportunidades o reducir gastos.'}
+                  </p>
+                  <p className="text-xs text-gray-600 mt-2">
+                    Sobre {formatCurrency(results.totalCapitalInvested)} € de capital invertido • 
+                    Beneficio neto anual: {formatCurrency((expectedRental * 12) - results.totalAnnualExpenses)} €
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
 
           <Separator />
 
