@@ -91,6 +91,8 @@ export default function DebtCapacitySimulator() {
     totalIncome: 0,
     totalDebts: 0,
     availableCapacity: 0,
+    debtRatio: 0,
+    maxAdditionalLoan: 0,
     maxMonthlyPayment: 0,
     maxPropertyPrice: 0,
     requiredDownPayment: 0,
@@ -232,6 +234,14 @@ export default function DebtCapacitySimulator() {
     // CAPACIDAD DISPONIBLE
     const availableCapacity = totalIncome - totalDebts;
 
+    // RATIO DE ENDEUDAMIENTO (Deudas / Ingresos)
+    const debtRatio = totalIncome > 0 ? (totalDebts / totalIncome) * 100 : 0;
+
+    // PRÉSTAMO ADICIONAL MÁXIMO
+    // El banco permite hasta 40% de endeudamiento
+    const maxAllowedDebt = totalIncome * 0.40;
+    const maxAdditionalLoan = maxAllowedDebt - totalDebts;
+
     // CUOTA MÁXIMA (40% de la capacidad disponible)
     const maxMonthlyPayment = availableCapacity * 0.40;
 
@@ -307,6 +317,8 @@ export default function DebtCapacitySimulator() {
       totalIncome: Math.round(totalIncome),
       totalDebts: Math.round(totalDebts),
       availableCapacity: Math.round(availableCapacity),
+      debtRatio: Math.round(debtRatio * 10) / 10,
+      maxAdditionalLoan: Math.round(Math.max(0, maxAdditionalLoan)),
       maxMonthlyPayment: Math.round(maxMonthlyPayment),
       maxPropertyPrice: Math.round(maxPropertyPrice),
       requiredDownPayment: Math.round(requiredDownPayment),
@@ -590,7 +602,7 @@ export default function DebtCapacitySimulator() {
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-6">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
             <div className="bg-green-100 p-4 rounded-lg">
               <p className="text-sm text-green-700 font-medium">✅ Ingresos totales</p>
               <p className="text-2xl font-bold text-green-900">{formatCurrency(results.totalIncome)} €/mes</p>
@@ -605,7 +617,76 @@ export default function DebtCapacitySimulator() {
               <p className="text-sm text-blue-700 font-medium">💚 Capacidad disponible</p>
               <p className="text-2xl font-bold text-blue-900">{formatCurrency(results.availableCapacity)} €/mes</p>
             </div>
+
+            <div className={`p-4 rounded-lg ${
+              results.debtRatio > 40 
+                ? 'bg-red-100 border-2 border-red-300' 
+                : 'bg-green-100 border-2 border-green-300'
+            }`}>
+              <p className={`text-sm font-medium ${
+                results.debtRatio > 40 ? 'text-red-700' : 'text-green-700'
+              }`}>
+                📊 Ratio de endeudamiento
+              </p>
+              <p className={`text-2xl font-bold ${
+                results.debtRatio > 40 ? 'text-red-900' : 'text-green-900'
+              }`}>
+                {results.debtRatio.toFixed(1)}%
+              </p>
+              <p className="text-xs text-gray-600 mt-1">
+                (Deudas / Ingresos)
+              </p>
+            </div>
           </div>
+
+          {/* Alerta dinámica según ratio */}
+          {results.totalIncome > 0 && (
+            <div className="mt-4">
+              {results.debtRatio > 40 ? (
+                <div className="bg-red-50 border-2 border-red-300 p-5 rounded-lg">
+                  <div className="flex items-start gap-3">
+                    <span className="text-4xl">😞</span>
+                    <div className="flex-1">
+                      <p className="text-lg font-bold text-red-800 mb-2">
+                        ⚠️ Has sobrepasado tu límite de endeudamiento
+                      </p>
+                      <p className="text-sm text-red-700">
+                        Tu ratio de endeudamiento actual es del <strong>{results.debtRatio.toFixed(1)}%</strong>, 
+                        superando el <strong>40%</strong> recomendado por los bancos.
+                      </p>
+                      <p className="text-sm text-red-700 mt-2">
+                        📊 <strong>Recomendación:</strong> Reduce tus deudas en al menos{' '}
+                        <strong>{formatCurrency(Math.abs(results.maxAdditionalLoan))} €/mes</strong> para poder 
+                        solicitar nuevos préstamos.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                <div className="bg-green-50 border-2 border-green-300 p-5 rounded-lg">
+                  <div className="flex items-start gap-3">
+                    <span className="text-4xl">😊</span>
+                    <div className="flex-1">
+                      <p className="text-lg font-bold text-green-800 mb-2">
+                        ✅ Tu nivel de endeudamiento es saludable
+                      </p>
+                      <p className="text-sm text-green-700">
+                        Tu ratio de endeudamiento actual es del <strong>{results.debtRatio.toFixed(1)}%</strong>, 
+                        por debajo del <strong>40%</strong> máximo admitido por los bancos.
+                      </p>
+                      {results.maxAdditionalLoan > 0 && (
+                        <p className="text-sm text-green-700 mt-2">
+                          💰 <strong>Buenas noticias:</strong> Podrías obtener un préstamo adicional de hasta{' '}
+                          <strong>{formatCurrency(results.maxAdditionalLoan)} €/mes</strong> en cuota, 
+                          manteniendo el 40% de endeudamiento.
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
 
           <Separator />
 
