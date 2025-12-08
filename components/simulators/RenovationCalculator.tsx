@@ -608,37 +608,45 @@ export default function RenovationCalculator() {
             simulationType="REFORMA"
             simulationData={{
               inputData: {
-                totalSurface,
-                floorPriceM2,
-                floorSurface,
-                paintPriceM2,
-                paintSurface,
-                windowPrice,
-                windowQuantity,
-                electricityPriceM2,
-                plumbingPriceM2,
-                kitchenPrice,
-                bathroomPrice,
-                furniturePrice,
+                totalArea,
+                floorArea,
+                floorPricePerM2,
+                paintArea,
+                paintPricePerM2,
+                windowsQuantity,
+                windowPricePerUnit,
+                electricityArea,
+                electricityPricePerM2,
+                plumbingArea,
+                plumbingPricePerM2,
+                kitchenBudget,
+                bathroomBudget,
+                doorsQuantity,
+                doorPricePerUnit,
+                otherCosts,
               },
               results: {
                 totalCost,
-                costPerM2,
+                costPerM2: totalArea > 0 ? totalCost / totalArea : 0,
               },
             }}
             onLoadSimulation={useCallback((data: any) => {
-              setTotalSurface(data.inputData.totalSurface || 80);
-              setFloorPriceM2(data.inputData.floorPriceM2 || 30);
-              setFloorSurface(data.inputData.floorSurface || 80);
-              setPaintPriceM2(data.inputData.paintPriceM2 || 15);
-              setPaintSurface(data.inputData.paintSurface || 200);
-              setWindowPrice(data.inputData.windowPrice || 400);
-              setWindowQuantity(data.inputData.windowQuantity || 4);
-              setElectricityPriceM2(data.inputData.electricityPriceM2 || 50);
-              setPlumbingPriceM2(data.inputData.plumbingPriceM2 || 60);
-              setKitchenPrice(data.inputData.kitchenPrice || 3000);
-              setBathroomPrice(data.inputData.bathroomPrice || 2500);
-              setFurniturePrice(data.inputData.furniturePrice || 2000);
+              setTotalArea(data.inputData.totalArea || 80);
+              setFloorArea(data.inputData.floorArea || 80);
+              setFloorPricePerM2(data.inputData.floorPricePerM2 || 40);
+              setPaintArea(data.inputData.paintArea || 200);
+              setPaintPricePerM2(data.inputData.paintPricePerM2 || 12);
+              setWindowsQuantity(data.inputData.windowsQuantity || 4);
+              setWindowPricePerUnit(data.inputData.windowPricePerUnit || 800);
+              setElectricityArea(data.inputData.electricityArea || 80);
+              setElectricityPricePerM2(data.inputData.electricityPricePerM2 || 35);
+              setPlumbingArea(data.inputData.plumbingArea || 80);
+              setPlumbingPricePerM2(data.inputData.plumbingPricePerM2 || 30);
+              setKitchenBudget(data.inputData.kitchenBudget || 5000);
+              setBathroomBudget(data.inputData.bathroomBudget || 3000);
+              setDoorsQuantity(data.inputData.doorsQuantity || 5);
+              setDoorPricePerUnit(data.inputData.doorPricePerUnit || 400);
+              setOtherCosts(data.inputData.otherCosts || 2000);
             }, [])}
             className="mb-6"
           />
