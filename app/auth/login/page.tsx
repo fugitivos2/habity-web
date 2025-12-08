@@ -34,8 +34,14 @@ function LoginForm() {
       if (result?.error) {
         setError(result.error)
       } else if (result?.ok) {
-        // Redirigir inmediatamente
-        window.location.href = callbackUrl
+        // Esperar a que la sesión se actualice
+        await getSession()
+        // Redirigir con router para evitar recarga completa
+        router.push(callbackUrl)
+        // Backup: Si router.push falla, forzar recarga
+        setTimeout(() => {
+          window.location.href = callbackUrl
+        }, 500)
       }
     } catch (error: any) {
       console.error('Login error:', error)
@@ -147,15 +153,15 @@ function LoginForm() {
               </div>
             </div>
 
-            {/* Forgot Password */}
-            <div className="flex items-center justify-end">
+            {/* Forgot Password - Temporalmente deshabilitado */}
+            {/* <div className="flex items-center justify-end">
               <Link
                 href="/auth/forgot-password"
                 className="text-sm font-medium text-blue-600 hover:text-blue-500 transition-colors"
               >
                 ¿Olvidaste tu contraseña?
               </Link>
-            </div>
+            </div> */}
 
             {/* Submit Button */}
             <button
