@@ -56,15 +56,20 @@ export async function GET(request: NextRequest) {
     ]);
 
     return NextResponse.json({
+      success: true,
       simulations,
       total,
       limit,
       offset,
     });
-  } catch (error) {
+  } catch (error: any) {
     console.error('Error al listar simulaciones:', error);
     return NextResponse.json(
-      { error: 'Error al listar simulaciones' },
+      { 
+        error: 'Error al listar simulaciones', 
+        details: error.message,
+        stack: process.env.NODE_ENV === 'development' ? error.stack : undefined 
+      },
       { status: 500 }
     );
   }
@@ -198,13 +203,18 @@ export async function POST(request: NextRequest) {
     }).catch(console.error);
 
     return NextResponse.json({
+      success: true,
       simulation,
       message: 'Simulación guardada correctamente',
     }, { status: 201 });
-  } catch (error) {
+  } catch (error: any) {
     console.error('Error al crear simulación:', error);
     return NextResponse.json(
-      { error: 'Error al crear simulación' },
+      { 
+        error: 'Error al crear simulación',
+        details: error.message,
+        stack: process.env.NODE_ENV === 'development' ? error.stack : undefined
+      },
       { status: 500 }
     );
   }

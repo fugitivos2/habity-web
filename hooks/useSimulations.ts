@@ -41,6 +41,7 @@ export interface UseSimulationsReturn {
   updateSimulation: (id: string, data: Partial<SimulationData>) => Promise<boolean>;
   deleteSimulation: (id: string) => Promise<boolean>;
   getSimulation: (id: string) => Promise<SimulationData | null>;
+  clearError: () => void;
   
   // Utilidades
   isAuthenticated: boolean;
@@ -78,7 +79,9 @@ export function useSimulations(): UseSimulationsReturn {
       const result = await response.json();
 
       if (!response.ok) {
-        throw new Error(result.error || 'Error al guardar simulación');
+        const errorMsg = result.error || 'Error al guardar simulación';
+        const details = result.details ? ` (${result.details})` : '';
+        throw new Error(errorMsg + details);
       }
 
       // Actualizar lista local
@@ -110,7 +113,9 @@ export function useSimulations(): UseSimulationsReturn {
       const result = await response.json();
 
       if (!response.ok) {
-        throw new Error(result.error || 'Error al cargar simulaciones');
+        const errorMsg = result.error || 'Error al cargar simulaciones';
+        const details = result.details ? ` (${result.details})` : '';
+        throw new Error(errorMsg + details);
       }
 
       setSimulations(result.simulations);
@@ -223,6 +228,11 @@ export function useSimulations(): UseSimulationsReturn {
     }
   }, [isAuthenticated]);
 
+  // Limpiar errores manualmente
+  const clearError = useCallback(() => {
+    setError(null);
+  }, []);
+
   return {
     simulations,
     loading,
@@ -232,6 +242,7 @@ export function useSimulations(): UseSimulationsReturn {
     updateSimulation,
     deleteSimulation,
     getSimulation,
+    clearError,
     isAuthenticated,
   };
 }

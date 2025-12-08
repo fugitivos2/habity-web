@@ -54,13 +54,19 @@ export default function SaveLoadButtons({
   className = '',
 }: SaveLoadButtonsProps) {
   const { data: session } = useSession();
-  const { saveSimulation, loadSimulations, simulations, loading, error, isAuthenticated } = useSimulations();
+  const { saveSimulation, loadSimulations, simulations, loading, error, clearError, isAuthenticated } = useSimulations();
 
   const [showSaveDialog, setShowSaveDialog] = useState(false);
   const [showLoadDialog, setShowLoadDialog] = useState(false);
   const [simulationName, setSimulationName] = useState('');
   const [selectedSimulation, setSelectedSimulation] = useState('');
   const [saveSuccess, setSaveSuccess] = useState(false);
+
+  // Abrir diálogo de guardado
+  const handleOpenSaveDialog = () => {
+    clearError(); // Limpiar errores anteriores
+    setShowSaveDialog(true);
+  };
 
   // Manejar guardado
   const handleSave = async () => {
@@ -85,6 +91,7 @@ export default function SaveLoadButtons({
 
   // Manejar carga de simulaciones
   const handleOpenLoadDialog = async () => {
+    clearError(); // Limpiar errores anteriores
     setShowLoadDialog(true);
     await loadSimulations(simulationType);
   };
@@ -118,7 +125,7 @@ export default function SaveLoadButtons({
     <>
       <div className={`flex flex-wrap gap-2 ${className}`}>
         <Button
-          onClick={() => setShowSaveDialog(true)}
+          onClick={handleOpenSaveDialog}
           variant="default"
           className="flex items-center gap-2"
         >
