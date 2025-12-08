@@ -21,33 +21,43 @@ export default function PurchaseCostsSimulator() {
   const [gestorFee, setGestorFee] = useState(600);
   const [agencyCommission, setAgencyCommission] = useState(0);
 
-  // Cálculo automático de ITP/IVA
+  // Cálculo automático de ITP/IVA/IPSI (SOLO este impuesto es automático)
   const calculateTax = () => {
     const regionData = AUTONOMOUS_REGIONS[region];
     let tax = 0;
     let taxName = '';
+    let taxRate = 0;
     
     if (isNewProperty) {
-      // Vivienda nueva: IVA (10%) + AJD
+      // Vivienda nueva en Ceuta/Melilla: IPSI 0.5% (bonificado)
       if (region === 'Ceuta' || region === 'Melilla') {
-        tax = propertyPrice * 0.005; // IPSI 0.5%
-        taxName = 'IPSI (0.5%)';
+        tax = propertyPrice * 0.005; // IPSI 0.5% bonificado
+        taxName = 'IPSI (0.5% bonificado)';
+        taxRate = 0.5;
       } else {
-        const iva = propertyPrice * 0.10; // IVA 10%
-        const ajd = propertyPrice * (regionData.ajdRate / 100);
-        tax = iva + ajd;
-        taxName = `IVA (10%) + AJD (${regionData.ajdRate}%)`;
+        // Vivienda nueva en resto de España: IVA 10% (NO se calcula automáticamente)
+        tax = 0; // Usuario debe introducirlo manualmente
+        taxName = 'IVA (10%)';
+        taxRate = 10;
       }
     } else {
       // Vivienda de segunda mano: ITP según comunidad
-      tax = propertyPrice * (regionData.itpRate / 100);
-      taxName = `ITP (${regionData.itpRate}%)`;
+      // Ceuta y Melilla tienen ITP bonificado al 3%
+      if (region === 'Ceuta' || region === 'Melilla') {
+        tax = propertyPrice * 0.03; // ITP 3% bonificado
+        taxName = 'ITP (3% bonificado)';
+        taxRate = 3;
+      } else {
+        tax = propertyPrice * (regionData.itpRate / 100);
+        taxName = `ITP (${regionData.itpRate}%)`;
+        taxRate = regionData.itpRate;
+      }
     }
     
-    return { tax, taxName };
+    return { tax, taxName, taxRate };
   };
 
-  const { tax, taxName } = calculateTax();
+  const { tax, taxName, taxRate } = calculateTax();
 
   // Total de gastos
   const totalCosts = notaryFee + registryFee + appraisalFee + tax + gestorFee + agencyCommission;
@@ -90,7 +100,7 @@ export default function PurchaseCostsSimulator() {
             {/* Precio de la Vivienda */}
             <div className="space-y-2">
               <Label htmlFor="propertyPrice" className="text-sm font-semibold">
-                Precio de Venta
+                Precio de la vivienda
               </Label>
               <div className="flex items-center gap-2">
                 <Input
@@ -102,6 +112,7 @@ export default function PurchaseCostsSimulator() {
                   min={10000}
                   max={5000000}
                   step={5000}
+                  placeholder="Ej: 250000"
                 />
                 <span className="text-sm text-gray-600 font-medium">€</span>
               </div>
@@ -129,44 +140,39 @@ export default function PurchaseCostsSimulator() {
                 </SelectContent>
               </Select>
               <p className="text-xs text-gray-500">
-                ITP aplicable: {AUTONOMOUS_REGIONS[region].itpRate}%
-                {(region === 'Ceuta' || region === 'Melilla') && ' (Bonificado del 6% al 3%)'}
+                {isNewProperty 
+                  ? (region === 'Ceuta' || region === 'Melilla'
+                      ? 'IPSI 0.5% bonificado (obra nueva)'
+                      : 'Obra nueva: IVA 10%')
+                  : `ITP aplicable: ${region === 'Ceuta' || region === 'Melilla' ? '3% bonificado' : AUTONOMOUS_REGIONS[region].itpRate + '%'}`}
               </p>
             </div>
 
-            {/* Tipo de Vivienda */}
+            {/* Tipo de Vivienda - Checkbox */}
             <div className="space-y-2">
-              <Label className="text-sm font-semibold">Tipo de Vivienda</Label>
-              <div className="grid grid-cols-2 gap-3">
-                <button
-                  type="button"
-                  onClick={() => setIsNewProperty(false)}
-                  className={`p-4 rounded-lg border-2 transition-all ${
-                    !isNewProperty
-                      ? 'border-green-500 bg-green-50 text-green-700'
-                      : 'border-gray-200 bg-white text-gray-700 hover:border-gray-300'
-                  }`}
-                >
-                  <div className="text-center">
-                    <div className="text-sm font-semibold">Segunda Mano</div>
-                    <div className="text-xs text-gray-500 mt-1">ITP</div>
-                  </div>
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setIsNewProperty(true)}
-                  className={`p-4 rounded-lg border-2 transition-all ${
-                    isNewProperty
-                      ? 'border-green-500 bg-green-50 text-green-700'
-                      : 'border-gray-200 bg-white text-gray-700 hover:border-gray-300'
-                  }`}
-                >
-                  <div className="text-center">
-                    <div className="text-sm font-semibold">Obra Nueva</div>
-                    <div className="text-xs text-gray-500 mt-1">IVA 10%</div>
-                  </div>
-                </button>
+              <div className="flex items-center gap-3 p-4 bg-green-100 rounded-lg border-2 border-green-300">
+                <input
+                  type="checkbox"
+                  id="isNewProperty"
+                  checked={isNewProperty}
+                  onChange={(e) => setIsNewProperty(e.target.checked)}
+                  className="w-5 h-5 text-green-600 border-2 border-green-400 rounded focus:ring-2 focus:ring-green-500 cursor-pointer"
+                />
+                <label htmlFor="isNewProperty" className="text-sm font-medium text-gray-700 cursor-pointer">
+                  Vivienda nueva {isNewProperty && (
+                    <span className="text-green-600 font-semibold">
+                      ({region === 'Ceuta' || region === 'Melilla' ? 'IPSI 0.5% bonificado' : 'IVA 10%'})
+                    </span>
+                  )}
+                </label>
               </div>
+              <p className="text-xs text-gray-500">
+                {isNewProperty 
+                  ? (region === 'Ceuta' || region === 'Melilla' 
+                      ? 'IPSI 0.5% se calcula automáticamente' 
+                      : 'Marca si la vivienda es de obra nueva (IVA 10%)')
+                  : `ITP ${taxRate}% se calcula automáticamente según la comunidad`}
+              </p>
             </div>
 
             {/* Gastos adicionales EDITABLES */}
@@ -336,9 +342,12 @@ export default function PurchaseCostsSimulator() {
                 </span>
               </div>
 
-              {/* ITP o IVA + AJD */}
-              <div className="flex justify-between items-center p-3 bg-purple-50 rounded-lg">
-                <span className="text-sm font-medium text-gray-700">{taxName}</span>
+              {/* ITP o IVA/IPSI (AUTO-CALCULADO) */}
+              <div className="flex justify-between items-center p-3 bg-purple-50 rounded-lg border-2 border-purple-200">
+                <div className="flex flex-col">
+                  <span className="text-sm font-medium text-gray-700">{taxName}</span>
+                  <span className="text-xs text-purple-600 font-semibold">Auto-calculado ({taxRate}%)</span>
+                </div>
                 <span className="text-lg font-bold text-purple-600">
                   {formatCurrency(tax)}
                 </span>
@@ -380,12 +389,14 @@ export default function PurchaseCostsSimulator() {
               <div className="flex items-start gap-2">
                 <AlertCircle className="w-4 h-4 text-amber-600 mt-0.5 flex-shrink-0" />
                 <div className="text-sm text-amber-800">
-                  <p className="font-semibold mb-2">⚠️ Nota importante:</p>
-                  <p className="leading-relaxed">
-                    Los cálculos mostrados son estimados y pueden variar según cada caso particular. 
-                    Los gastos de notaría y registro dependen del valor de la operación. 
-                    Consulta con un profesional para obtener cifras exactas.
-                  </p>
+                  <p className="font-semibold mb-2">⚠️ Recuerda:</p>
+                  <ul className="space-y-1 list-disc list-inside leading-relaxed">
+                    <li>Estos gastos son orientativos y pueden variar</li>
+                    <li>Los gastos de notaría y registro dependen del valor de la operación</li>
+                    <li>En algunas comunidades pueden existir bonificaciones fiscales</li>
+                    <li><strong>Solo el ITP/IPSI se calcula automáticamente</strong> según la comunidad seleccionada</li>
+                    <li><strong>Ceuta y Melilla</strong>: ITP 3% bonificado (segunda mano) o IPSI 0.5% bonificado (obra nueva)</li>
+                  </ul>
                 </div>
               </div>
             </CardContent>
