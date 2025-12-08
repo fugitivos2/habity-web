@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
@@ -18,6 +18,7 @@ import {
   PiggyBank,
   Calendar
 } from 'lucide-react';
+import SaveLoadButtons from './SaveLoadButtons';
 
 // Tipos
 interface ExtraIncome {
@@ -702,6 +703,36 @@ export default function DebtCapacitySimulator() {
           )}
         </CardContent>
       </Card>
+
+      {/* Botones Guardar/Cargar */}
+      <SaveLoadButtons
+        simulationType="RATIO_ENDEUDAMIENTO"
+        simulationData={{
+          inputData: {
+            netSalary,
+            extraIncomes,
+            debts,
+            ltv,
+            years,
+            interestRate,
+          },
+          results: {
+            totalIncome,
+            totalDebt,
+            availableCapacity,
+            debtRatio,
+            maxLoan,
+            maxMonthlyPayment,
+            estimatedPropertyPrice,
+          },
+        }}
+        onLoadSimulation={useCallback((data: any) => {
+          setNetSalary(data.inputData.netSalary || 2500);
+          setExtraIncomes(data.inputData.extraIncomes || []);
+          setDebts(data.inputData.debts || []);
+        }, [])}
+        className="mb-6"
+      />
 
       {/* Disclaimer */}
       <Card className="bg-amber-50 border-amber-300">

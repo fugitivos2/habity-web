@@ -1,11 +1,12 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Separator } from '@/components/ui/separator';
 import { Calculator, TrendingUp, Home, AlertCircle, Euro, Plus, X } from 'lucide-react';
+import SaveLoadButtons from './SaveLoadButtons';
 
 // Tipos de IRPF por ganancia patrimonial (2024)
 const IRPF_BRACKETS = [
@@ -507,6 +508,33 @@ export default function TaxCalculator() {
               </p>
             </CardContent>
           </Card>
+
+          {/* Botones Guardar/Cargar */}
+          <SaveLoadButtons
+            simulationType="FISCAL"
+            simulationData={{
+              inputData: {
+                purchasePrice,
+                purchaseExpenses,
+                yearsOwned,
+                salePrice,
+                saleExpenses,
+                cityTaxRate,
+                isReinvestment,
+              },
+              results: result,
+            }}
+            onLoadSimulation={useCallback((data: any) => {
+              setPurchasePrice(data.inputData.purchasePrice || 200000);
+              setPurchaseExpenses(data.inputData.purchaseExpenses || []);
+              setYearsOwned(data.inputData.yearsOwned || 5);
+              setSalePrice(data.inputData.salePrice || 280000);
+              setSaleExpenses(data.inputData.saleExpenses || []);
+              setCityTaxRate(data.inputData.cityTaxRate || 3.0);
+              setIsReinvestment(data.inputData.isReinvestment || false);
+            }, [])}
+            className="mb-6"
+          />
 
           <Card className="bg-amber-50 border-amber-200">
             <CardContent className="pt-6">

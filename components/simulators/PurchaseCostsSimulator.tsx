@@ -1,12 +1,13 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { AUTONOMOUS_REGIONS, type Region } from '@/lib/simulators/purchase-costs';
 import { FileText, Scale, Building2, Calculator, AlertCircle } from 'lucide-react';
+import SaveLoadButtons from './SaveLoadButtons';
 
 export default function PurchaseCostsSimulator() {
   // Estados principales
@@ -382,6 +383,45 @@ export default function PurchaseCostsSimulator() {
               </div>
             </CardContent>
           </Card>
+
+          {/* Botones Guardar/Cargar */}
+          <SaveLoadButtons
+            simulationType="GASTOS_COMPRA"
+            simulationData={{
+              inputData: {
+                propertyPrice,
+                region,
+                isNewProperty,
+                notaryFee,
+                registryFee,
+                appraisalFee,
+                gestorFee,
+                agencyCommission,
+              },
+              results: {
+                tax: taxAmount,
+                taxName,
+                taxRate,
+                totalCosts,
+                notaryFee,
+                registryFee,
+                appraisalFee,
+                gestorFee,
+                agencyCommission,
+              },
+            }}
+            onLoadSimulation={useCallback((data: any) => {
+              setPropertyPrice(data.inputData.propertyPrice || 250000);
+              setRegion(data.inputData.region || 'Madrid');
+              setIsNewProperty(data.inputData.isNewProperty || false);
+              setNotaryFee(data.inputData.notaryFee || 1250);
+              setRegistryFee(data.inputData.registryFee || 1000);
+              setAppraisalFee(data.inputData.appraisalFee || 300);
+              setGestorFee(data.inputData.gestorFee || 600);
+              setAgencyCommission(data.inputData.agencyCommission || 0);
+            }, [])}
+            className="mb-6"
+          />
 
           {/* Información Adicional */}
           <Card className="bg-amber-50 border-amber-200">

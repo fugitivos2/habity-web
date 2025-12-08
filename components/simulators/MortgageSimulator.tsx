@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
@@ -8,6 +8,7 @@ import { Slider } from '@/components/ui/slider';
 import { calculateMortgage } from '@/lib/simulators/mortgage';
 import type { MortgageSimulationParams, MortgageSimulationResult } from '@/lib/simulators/mortgage';
 import { Calculator, TrendingUp, Calendar, Percent, Home, Wallet } from 'lucide-react';
+import SaveLoadButtons from './SaveLoadButtons';
 
 export default function MortgageSimulator() {
   const [params, setParams] = useState<MortgageSimulationParams>({
@@ -280,6 +281,20 @@ export default function MortgageSimulator() {
                 </div>
               </CardContent>
             </Card>
+          )}
+
+          {/* Botones Guardar/Cargar */}
+          {result && (
+            <SaveLoadButtons
+              simulationType="HIPOTECA"
+              simulationData={{
+                inputData: params,
+                results: result,
+              }}
+              onLoadSimulation={useCallback((data: any) => {
+                setParams(data.inputData);
+              }, [])}
+            />
           )}
 
           {/* Advertencia LTV */}

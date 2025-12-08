@@ -1,10 +1,11 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Separator } from '@/components/ui/separator';
+import SaveLoadButtons from './SaveLoadButtons';
 import { 
   Hammer, 
   Paintbrush, 
@@ -602,6 +603,46 @@ export default function RenovationCalculator() {
           </Card>
 
           {/* Información Adicional */}
+          {/* Botones Guardar/Cargar */}
+          <SaveLoadButtons
+            simulationType="REFORMA"
+            simulationData={{
+              inputData: {
+                totalSurface,
+                floorPriceM2,
+                floorSurface,
+                paintPriceM2,
+                paintSurface,
+                windowPrice,
+                windowQuantity,
+                electricityPriceM2,
+                plumbingPriceM2,
+                kitchenPrice,
+                bathroomPrice,
+                furniturePrice,
+              },
+              results: {
+                totalCost,
+                costPerM2,
+              },
+            }}
+            onLoadSimulation={useCallback((data: any) => {
+              setTotalSurface(data.inputData.totalSurface || 80);
+              setFloorPriceM2(data.inputData.floorPriceM2 || 30);
+              setFloorSurface(data.inputData.floorSurface || 80);
+              setPaintPriceM2(data.inputData.paintPriceM2 || 15);
+              setPaintSurface(data.inputData.paintSurface || 200);
+              setWindowPrice(data.inputData.windowPrice || 400);
+              setWindowQuantity(data.inputData.windowQuantity || 4);
+              setElectricityPriceM2(data.inputData.electricityPriceM2 || 50);
+              setPlumbingPriceM2(data.inputData.plumbingPriceM2 || 60);
+              setKitchenPrice(data.inputData.kitchenPrice || 3000);
+              setBathroomPrice(data.inputData.bathroomPrice || 2500);
+              setFurniturePrice(data.inputData.furniturePrice || 2000);
+            }, [])}
+            className="mb-6"
+          />
+
           <Card className="bg-amber-50 border-amber-200">
             <CardContent className="pt-6">
               <div className="flex items-start gap-2">
