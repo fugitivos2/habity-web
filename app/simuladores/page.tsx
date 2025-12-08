@@ -5,7 +5,8 @@ import PurchaseCostsSimulator from '@/components/simulators/PurchaseCostsSimulat
 import DebtCapacitySimulator from '@/components/simulators/DebtCapacitySimulator';
 import TaxCalculator from '@/components/simulators/TaxCalculator';
 import RenovationCalculator from '@/components/simulators/RenovationCalculator';
-import { Calculator, FileText, TrendingUp, Wallet, Euro, Hammer } from 'lucide-react';
+import { Calculator, FileText, TrendingUp, Wallet, Euro, Hammer, ArrowLeft, LayoutDashboard } from 'lucide-react';
+import Link from 'next/link';
 
 export const metadata: Metadata = {
   title: 'Simuladores Financieros | HABITY',
@@ -16,6 +17,18 @@ export default function SimulatorsPage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 py-8 px-4 sm:px-6 lg:px-8">
       <div className="max-w-7xl mx-auto">
+        {/* Botón volver al dashboard */}
+        <div className="mb-6">
+          <Link 
+            href="/dashboard"
+            className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 hover:text-blue-600 transition-colors shadow-sm"
+          >
+            <ArrowLeft className="w-4 h-4" />
+            <LayoutDashboard className="w-4 h-4" />
+            Volver al Dashboard
+          </Link>
+        </div>
+
         {/* Header */}
         <div className="text-center mb-8">
           <div className="inline-flex items-center justify-center p-3 bg-gradient-to-br from-blue-500 to-purple-600 rounded-2xl mb-4 shadow-lg">
