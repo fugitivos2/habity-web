@@ -3,7 +3,17 @@
 
 import { useState, useCallback } from 'react';
 import { useSession } from 'next-auth/react';
-import { SimulationType } from '@prisma/client';
+
+// Tipos de simulación (replicados del schema de Prisma)
+type SimulationType = 
+  | 'HIPOTECA'
+  | 'GASTOS_COMPRA'
+  | 'RENTABILIDAD'
+  | 'RATIO_ENDEUDAMIENTO'
+  | 'AHORRO_OBJETIVO'
+  | 'COMPARADOR'
+  | 'FISCAL'
+  | 'REFORMA';
 
 export interface SimulationData {
   id?: string;
