@@ -4,9 +4,8 @@ import { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Separator } from '@/components/ui/separator';
-import { Calculator, TrendingUp, Home, AlertCircle, DollarSign } from 'lucide-react';
+import { Calculator, TrendingUp, Home, AlertCircle, Euro, Plus, X } from 'lucide-react';
 
 // Tipos de IRPF por ganancia patrimonial (2024)
 // Tramos progresivos según la ganancia
@@ -18,15 +17,39 @@ const IRPF_BRACKETS = [
   { max: Infinity, rate: 28 }
 ];
 
+// Tipos de gastos de compra
+interface PurchaseExpense {
+  id: string;
+  name: string;
+  amount: number;
+}
+
+// Tipos de gastos de venta
+interface SaleExpense {
+  id: string;
+  name: string;
+  amount: number;
+}
+
 export default function TaxCalculator() {
   // Estados de compra
   const [purchasePrice, setPurchasePrice] = useState(200000);
-  const [purchaseCosts, setPurchaseCosts] = useState(15000); // Gastos de compra
+  const [purchaseExpenses, setPurchaseExpenses] = useState<PurchaseExpense[]>([
+    { id: '1', name: 'ITP', amount: 12000 },
+    { id: '2', name: 'Notaría', amount: 1250 },
+    { id: '3', name: 'Registro', amount: 1000 },
+    { id: '4', name: 'Tasación', amount: 300 },
+    { id: '5', name: 'Gestoría', amount: 600 }
+  ]);
   const [yearsOwned, setYearsOwned] = useState(5);
 
   // Estados de venta
   const [salePrice, setSalePrice] = useState(280000);
-  const [saleCosts, setSaleCosts] = useState(8000); // Gastos de venta (comisiones, etc)
+  const [saleExpenses, setSaleExpenses] = useState<SaleExpense[]>([
+    { id: '1', name: 'Comisión Inmobiliaria', amount: 8400 }, // 3% típico
+    { id: '2', name: 'Certificado Energético', amount: 150 },
+    { id: '3', name: 'Plusvalía Municipal (pago)', amount: 0 } // Se calcula después
+  ]);
 
   // Plusvalía municipal
   const [cityTaxRate, setCityTaxRate] = useState(3.0); // % anual (varía por municipio)
@@ -34,13 +57,56 @@ export default function TaxCalculator() {
   // Reinversión en vivienda habitual
   const [isReinvestment, setIsReinvestment] = useState(false);
 
+  // Funciones para gastos de compra
+  const addPurchaseExpense = () => {
+    const newExpense: PurchaseExpense = {
+      id: Date.now().toString(),
+      name: '',
+      amount: 0
+    };
+    setPurchaseExpenses([...purchaseExpenses, newExpense]);
+  };
+
+  const removePurchaseExpense = (id: string) => {
+    setPurchaseExpenses(purchaseExpenses.filter(exp => exp.id !== id));
+  };
+
+  const updatePurchaseExpense = (id: string, field: keyof PurchaseExpense, value: any) => {
+    setPurchaseExpenses(purchaseExpenses.map(exp => 
+      exp.id === id ? { ...exp, [field]: value } : exp
+    ));
+  };
+
+  // Funciones para gastos de venta
+  const addSaleExpense = () => {
+    const newExpense: SaleExpense = {
+      id: Date.now().toString(),
+      name: '',
+      amount: 0
+    };
+    setSaleExpenses([...saleExpenses, newExpense]);
+  };
+
+  const removeSaleExpense = (id: string) => {
+    setSaleExpenses(saleExpenses.filter(exp => exp.id !== id));
+  };
+
+  const updateSaleExpense = (id: string, field: keyof SaleExpense, value: any) => {
+    setSaleExpenses(saleExpenses.map(exp => 
+      exp.id === id ? { ...exp, [field]: value } : exp
+    ));
+  };
+
   // Cálculos
   const calculateTaxes = () => {
+    // Calcular totales de gastos
+    const totalPurchaseCosts = purchaseExpenses.reduce((sum, exp) => sum + exp.amount, 0);
+    const totalSaleCosts = saleExpenses.reduce((sum, exp) => sum + exp.amount, 0);
+
     // 1. GANANCIA PATRIMONIAL
     // Ganancia = Precio Venta - (Precio Compra + Gastos Compra + Gastos Venta)
-    const totalAcquisitionCost = purchasePrice + purchaseCosts;
-    const totalTransmissionCost = saleCosts;
-    const capitalGain = salePrice - totalAcquisitionCost - totalTransmissionCost;
+    const totalAcquisitionCost = purchasePrice + totalPurchaseCosts;
+    const capitalGain = salePrice - totalAcquisitionCost - totalSaleCosts;
 
     // 2. IRPF (solo si NO se reinvierte en vivienda habitual)
     let irpfTax = 0;
@@ -83,7 +149,9 @@ export default function TaxCalculator() {
       plusvaliaTax,
       totalTax,
       netGain,
-      effectiveRate: capitalGain > 0 ? (totalTax / capitalGain) * 100 : 0
+      effectiveRate: capitalGain > 0 ? (totalTax / capitalGain) * 100 : 0,
+      totalPurchaseCosts,
+      totalSaleCosts
     };
   };
 
@@ -144,25 +212,68 @@ export default function TaxCalculator() {
                 </div>
               </div>
 
-              {/* Gastos de compra */}
-              <div className="space-y-2">
-                <Label htmlFor="purchaseCosts" className="font-semibold">
-                  Gastos de compra (ITP, notaría, registro...)
-                </Label>
-                <div className="flex gap-2">
-                  <Input
-                    id="purchaseCosts"
-                    type="number"
-                    value={purchaseCosts}
-                    onChange={(e) => setPurchaseCosts(Number(e.target.value))}
-                    className="flex-1"
-                    min={0}
-                    step={500}
-                  />
-                  <span className="flex items-center px-3 bg-gray-100 rounded-md text-sm font-medium">€</span>
+              <Separator />
+
+              {/* Gastos de compra - DESGLOSADOS */}
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <Label className="font-semibold">💸 Gastos de compra (desglose)</Label>
+                  <button
+                    onClick={addPurchaseExpense}
+                    className="flex items-center gap-1 px-3 py-1.5 text-sm bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
+                  >
+                    <Plus className="w-4 h-4" />
+                    Añadir gasto
+                  </button>
                 </div>
-                <p className="text-xs text-gray-500">Aprox. 7-10% del precio de compra</p>
+
+                {purchaseExpenses.map((expense, index) => (
+                  <div key={expense.id} className="bg-blue-50 p-3 rounded-lg space-y-2 border border-blue-200">
+                    <div className="flex items-center justify-between">
+                      <Label className="text-xs font-medium">Gasto {index + 1}</Label>
+                      {purchaseExpenses.length > 1 && (
+                        <button
+                          onClick={() => removePurchaseExpense(expense.id)}
+                          className="text-red-500 hover:text-red-700 transition-colors"
+                        >
+                          <X className="w-4 h-4" />
+                        </button>
+                      )}
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-2">
+                      <Input
+                        type="text"
+                        placeholder="Concepto (ej: ITP)"
+                        value={expense.name}
+                        onChange={(e) => updatePurchaseExpense(expense.id, 'name', e.target.value)}
+                        className="text-sm bg-white"
+                      />
+                      <div className="flex gap-1">
+                        <Input
+                          type="number"
+                          placeholder="Cantidad"
+                          value={expense.amount}
+                          onChange={(e) => updatePurchaseExpense(expense.id, 'amount', Number(e.target.value))}
+                          className="text-sm bg-white"
+                          min={0}
+                        />
+                        <span className="flex items-center px-2 bg-white rounded text-xs">€</span>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+
+                {/* Total gastos compra */}
+                <div className="bg-blue-100 p-3 rounded-lg">
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm font-semibold text-blue-900">Total gastos compra:</span>
+                    <span className="text-lg font-bold text-blue-700">{formatCurrency(result.totalPurchaseCosts)}</span>
+                  </div>
+                </div>
               </div>
+
+              <Separator />
 
               {/* Años de propiedad */}
               <div className="space-y-2">
@@ -215,25 +326,68 @@ export default function TaxCalculator() {
                 </div>
               </div>
 
-              {/* Gastos de venta */}
-              <div className="space-y-2">
-                <Label htmlFor="saleCosts" className="font-semibold">
-                  Gastos de venta (comisiones, certificados...)
-                </Label>
-                <div className="flex gap-2">
-                  <Input
-                    id="saleCosts"
-                    type="number"
-                    value={saleCosts}
-                    onChange={(e) => setSaleCosts(Number(e.target.value))}
-                    className="flex-1"
-                    min={0}
-                    step={500}
-                  />
-                  <span className="flex items-center px-3 bg-gray-100 rounded-md text-sm font-medium">€</span>
+              <Separator />
+
+              {/* Gastos de venta - DESGLOSADOS */}
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <Label className="font-semibold">💸 Gastos de venta (desglose)</Label>
+                  <button
+                    onClick={addSaleExpense}
+                    className="flex items-center gap-1 px-3 py-1.5 text-sm bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors"
+                  >
+                    <Plus className="w-4 h-4" />
+                    Añadir gasto
+                  </button>
                 </div>
-                <p className="text-xs text-gray-500">Comisión inmobiliaria, certificado energético, etc.</p>
+
+                {saleExpenses.map((expense, index) => (
+                  <div key={expense.id} className="bg-green-50 p-3 rounded-lg space-y-2 border border-green-200">
+                    <div className="flex items-center justify-between">
+                      <Label className="text-xs font-medium">Gasto {index + 1}</Label>
+                      {saleExpenses.length > 1 && (
+                        <button
+                          onClick={() => removeSaleExpense(expense.id)}
+                          className="text-red-500 hover:text-red-700 transition-colors"
+                        >
+                          <X className="w-4 h-4" />
+                        </button>
+                      )}
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-2">
+                      <Input
+                        type="text"
+                        placeholder="Concepto"
+                        value={expense.name}
+                        onChange={(e) => updateSaleExpense(expense.id, 'name', e.target.value)}
+                        className="text-sm bg-white"
+                      />
+                      <div className="flex gap-1">
+                        <Input
+                          type="number"
+                          placeholder="Cantidad"
+                          value={expense.amount}
+                          onChange={(e) => updateSaleExpense(expense.id, 'amount', Number(e.target.value))}
+                          className="text-sm bg-white"
+                          min={0}
+                        />
+                        <span className="flex items-center px-2 bg-white rounded text-xs">€</span>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+
+                {/* Total gastos venta */}
+                <div className="bg-green-100 p-3 rounded-lg">
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm font-semibold text-green-900">Total gastos venta:</span>
+                    <span className="text-lg font-bold text-green-700">{formatCurrency(result.totalSaleCosts)}</span>
+                  </div>
+                </div>
               </div>
+
+              <Separator />
 
               {/* Tasa plusvalía municipal */}
               <div className="space-y-2">
@@ -297,7 +451,7 @@ export default function TaxCalculator() {
           <Card className="border-2 border-purple-300 bg-gradient-to-br from-purple-50 to-white">
             <CardHeader>
               <CardTitle className="flex items-center gap-2 text-purple-700">
-                <DollarSign className="w-6 h-6" />
+                <Euro className="w-6 h-6" />
                 💰 Ganancia Patrimonial
               </CardTitle>
             </CardHeader>
@@ -306,7 +460,7 @@ export default function TaxCalculator() {
                 {formatCurrency(result.capitalGain)}
               </div>
               <p className="text-sm text-gray-600">
-                Precio venta ({formatCurrency(salePrice)}) - Precio compra total ({formatCurrency(purchasePrice + purchaseCosts + saleCosts)})
+                Precio venta ({formatCurrency(salePrice)}) - Precio compra total ({formatCurrency(purchasePrice + result.totalPurchaseCosts + result.totalSaleCosts)})
               </p>
             </CardContent>
           </Card>
