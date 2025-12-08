@@ -399,7 +399,7 @@ export default function PurchaseCostsSimulator() {
                 agencyCommission,
               },
               results: {
-                tax: taxAmount,
+                tax,
                 taxName,
                 taxRate,
                 totalCosts,
