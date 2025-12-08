@@ -715,21 +715,19 @@ export default function DebtCapacitySimulator() {
             ltv,
             years,
             interestRate,
+            targetAmount,
+            currentSavings,
+            monthlySavings,
           },
-          results: {
-            totalIncome,
-            totalDebt,
-            availableCapacity,
-            debtRatio,
-            maxLoan,
-            maxMonthlyPayment,
-            estimatedPropertyPrice,
-          },
+          results: results,
         }}
         onLoadSimulation={useCallback((data: any) => {
           setNetSalary(data.inputData.netSalary || 2500);
           setExtraIncomes(data.inputData.extraIncomes || []);
           setDebts(data.inputData.debts || []);
+          setTargetAmount(data.inputData.targetAmount || 0);
+          setCurrentSavings(data.inputData.currentSavings || 0);
+          setMonthlySavings(data.inputData.monthlySavings || 0);
         }, [])}
         className="mb-6"
       />
