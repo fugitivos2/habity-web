@@ -327,11 +327,11 @@ export default function MisSimulacionesPage() {
                     {/* Fecha */}
                     <div className="flex items-center text-xs text-gray-500 mb-4">
                       <Calendar className="h-4 w-4 mr-1" />
-                      {new Date(simulation.updatedAt).toLocaleDateString('es-ES', {
+                      {simulation.updatedAt ? new Date(simulation.updatedAt).toLocaleDateString('es-ES', {
                         year: 'numeric',
                         month: 'long',
                         day: 'numeric',
-                      })}
+                      }) : 'Fecha desconocida'}
                     </div>
 
                     {/* Notas (si existen) */}
