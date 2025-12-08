@@ -14,7 +14,9 @@ import {
   TrendingUp, 
   AlertCircle, 
   Plus,
-  Trash2
+  Trash2,
+  PiggyBank,
+  Calendar
 } from 'lucide-react';
 
 // Tipos
@@ -51,6 +53,11 @@ export default function DebtCapacitySimulator() {
 
 
 
+  // CALCULADORA DE AHORRO
+  const [targetAmount, setTargetAmount] = useState(0); // Cantidad necesaria (editable)
+  const [currentSavings, setCurrentSavings] = useState(0); // Cantidad disponible (ahorro actual)
+  const [monthlySavings, setMonthlySavings] = useState(0); // Capacidad de ahorro mensual
+
   // RESULTADOS
   const [results, setResults] = useState({
     totalIncome: 0,
@@ -58,7 +65,9 @@ export default function DebtCapacitySimulator() {
     availableCapacity: 0,
     debtRatio: 0,
     maxAdditionalLoan: 0,
-    maxMonthlyPayment: 0
+    maxMonthlyPayment: 0,
+    monthsToSave: 0, // Meses necesarios para alcanzar la cantidad
+    estimatedDate: '' // Fecha estimada
   });
 
   // FUNCIONES AÑADIR/ELIMINAR INGRESOS
@@ -107,7 +116,7 @@ export default function DebtCapacitySimulator() {
 
   useEffect(() => {
     calculateCapacity();
-  }, [netSalary, extraIncomes, debts]);
+  }, [netSalary, extraIncomes, debts, targetAmount, currentSavings, monthlySavings]);
 
   const calculateCapacity = () => {
     // INGRESOS TOTALES
@@ -134,13 +143,40 @@ export default function DebtCapacitySimulator() {
     // CUOTA MÁXIMA (40% de la capacidad disponible)
     const maxMonthlyPayment = availableCapacity * 0.40;
 
+    // CALCULADORA DE AHORRO
+    let monthsToSave = 0;
+    let estimatedDate = '';
+    
+    // Si hay cantidad objetivo y capacidad de ahorro mensual
+    if (targetAmount > 0 && monthlySavings > 0) {
+      if (currentSavings >= targetAmount) {
+        // Ya tiene el dinero completo
+        monthsToSave = 0;
+        estimatedDate = '¡Ya tienes la cantidad necesaria!';
+      } else {
+        // Calcular cuánto falta y cuántos meses se necesitan
+        const remaining = targetAmount - currentSavings;
+        monthsToSave = Math.ceil(remaining / monthlySavings);
+        
+        // Calcular fecha estimada
+        const futureDate = new Date();
+        futureDate.setMonth(futureDate.getMonth() + monthsToSave);
+        estimatedDate = futureDate.toLocaleDateString('es-ES', { 
+          month: 'long', 
+          year: 'numeric' 
+        });
+      }
+    }
+
     setResults({
       totalIncome: Math.round(totalIncome),
       totalDebts: Math.round(totalDebts),
       availableCapacity: Math.round(availableCapacity),
       debtRatio: Math.round(debtRatio * 10) / 10,
       maxAdditionalLoan: Math.round(Math.max(0, maxAdditionalLoan)),
-      maxMonthlyPayment: Math.round(maxMonthlyPayment)
+      maxMonthlyPayment: Math.round(maxMonthlyPayment),
+      monthsToSave,
+      estimatedDate
     });
   };
 
@@ -511,6 +547,161 @@ export default function DebtCapacitySimulator() {
 
 
 
+
+      {/* CALCULADORA DE AHORRO */}
+      <Card className="border-yellow-300 bg-gradient-to-br from-yellow-50 to-orange-50">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <PiggyBank className="w-5 h-5 text-yellow-600" />
+            💰 Calculadora de Ahorro
+          </CardTitle>
+          <CardDescription>
+            Calcula cuánto tiempo necesitas para reunir la cantidad que necesitas
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-6">
+          {/* Campos de entrada */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            {/* Cantidad necesaria */}
+            <div className="space-y-2">
+              <Label htmlFor="targetAmount" className="font-semibold">💵 Cantidad necesaria</Label>
+              <div className="flex gap-2">
+                <Input
+                  id="targetAmount"
+                  type="number"
+                  value={targetAmount}
+                  onChange={(e) => setTargetAmount(Number(e.target.value))}
+                  className="flex-1"
+                  placeholder="Ej: 20000"
+                  min="0"
+                />
+                <span className="flex items-center px-3 bg-gray-100 rounded-md text-sm font-medium">€</span>
+              </div>
+              <p className="text-xs text-gray-500">¿Cuánto dinero necesitas?</p>
+            </div>
+
+            {/* Cantidad disponible (ahorro actual) */}
+            <div className="space-y-2">
+              <Label htmlFor="currentSavings" className="font-semibold">💳 Cantidad disponible</Label>
+              <div className="flex gap-2">
+                <Input
+                  id="currentSavings"
+                  type="number"
+                  value={currentSavings}
+                  onChange={(e) => setCurrentSavings(Number(e.target.value))}
+                  className="flex-1"
+                  placeholder="Ej: 5000"
+                  min="0"
+                />
+                <span className="flex items-center px-3 bg-gray-100 rounded-md text-sm font-medium">€</span>
+              </div>
+              <p className="text-xs text-gray-500">Ahorro que ya tienes</p>
+            </div>
+
+            {/* Capacidad de ahorro mensual */}
+            <div className="space-y-2">
+              <Label htmlFor="monthlySavings" className="font-semibold">📅 Ahorro mensual</Label>
+              <div className="flex gap-2">
+                <Input
+                  id="monthlySavings"
+                  type="number"
+                  value={monthlySavings}
+                  onChange={(e) => setMonthlySavings(Number(e.target.value))}
+                  className="flex-1"
+                  placeholder="Ej: 500"
+                  min="0"
+                />
+                <span className="flex items-center px-3 bg-gray-100 rounded-md text-sm font-medium">€/mes</span>
+              </div>
+              <p className="text-xs text-gray-500">¿Cuánto ahorras al mes?</p>
+            </div>
+          </div>
+
+          <Separator />
+
+          {/* Resultados de la calculadora */}
+          {targetAmount > 0 && monthlySavings > 0 && (
+            <div>
+              {currentSavings >= targetAmount ? (
+                // Caso: Ya tiene el dinero completo
+                <div className="bg-gradient-to-r from-green-50 to-emerald-50 p-6 rounded-lg border-2 border-green-300">
+                  <div className="flex items-center gap-3 mb-3">
+                    <span className="text-5xl">🎉</span>
+                    <div className="flex-1">
+                      <p className="text-2xl font-bold text-green-700 mb-1">¡Ya tienes la cantidad necesaria!</p>
+                      <p className="text-sm text-gray-600">
+                        Tienes <strong>{formatCurrency(currentSavings)} €</strong> ahorrados, 
+                        suficiente para cubrir los <strong>{formatCurrency(targetAmount)} €</strong> que necesitas.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                // Caso: Todavía necesita ahorrar
+                <div className="bg-gradient-to-r from-yellow-50 to-orange-50 p-6 rounded-lg border-2 border-yellow-300">
+                  <div className="flex items-start gap-4">
+                    <Calendar className="w-8 h-8 text-yellow-600 flex-shrink-0 mt-1" />
+                    <div className="flex-1 space-y-4">
+                      {/* Título y meses */}
+                      <div>
+                        <p className="text-lg font-semibold text-gray-700 mb-2">⏱️ Tiempo estimado:</p>
+                        <p className="text-5xl font-bold text-yellow-600">
+                          {results.monthsToSave} {results.monthsToSave === 1 ? 'mes' : 'meses'}
+                        </p>
+                        <p className="text-sm text-gray-600 mt-2">
+                          Fecha estimada: <strong>{results.estimatedDate}</strong>
+                        </p>
+                      </div>
+
+                      <Separator />
+
+                      {/* Desglose detallado */}
+                      <div className="bg-white p-4 rounded-lg space-y-2">
+                        <div className="flex justify-between items-center text-sm">
+                          <span className="text-gray-600">💵 Cantidad necesaria:</span>
+                          <span className="font-semibold text-gray-900">{formatCurrency(targetAmount)} €</span>
+                        </div>
+                        <div className="flex justify-between items-center text-sm">
+                          <span className="text-gray-600">💳 Ahorro actual:</span>
+                          <span className="font-semibold text-green-600">- {formatCurrency(currentSavings)} €</span>
+                        </div>
+                        <Separator />
+                        <div className="flex justify-between items-center text-sm">
+                          <span className="text-gray-700 font-medium">📊 Aún te faltan:</span>
+                          <span className="font-bold text-orange-600 text-lg">{formatCurrency(targetAmount - currentSavings)} €</span>
+                        </div>
+                        <div className="flex justify-between items-center text-sm mt-3 bg-yellow-50 p-2 rounded">
+                          <span className="text-gray-700">📅 Ahorrando <strong>{formatCurrency(monthlySavings)} €/mes</strong></span>
+                          <span className="text-yellow-700 font-semibold">→ {results.monthsToSave} meses</span>
+                        </div>
+                      </div>
+
+                      {/* Consejo motivacional */}
+                      <div className="bg-blue-50 p-3 rounded-lg border border-blue-200">
+                        <p className="text-xs text-blue-800">
+                          <strong>💡 Consejo:</strong> Si aumentas tu ahorro mensual a <strong>{formatCurrency(monthlySavings + 100)} €</strong>, 
+                          podrías alcanzar tu objetivo en <strong>{Math.ceil((targetAmount - currentSavings) / (monthlySavings + 100))} meses</strong> 
+                          ({results.monthsToSave - Math.ceil((targetAmount - currentSavings) / (monthlySavings + 100))} meses menos).
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Mensaje si faltan datos */}
+          {(targetAmount === 0 || monthlySavings === 0) && (
+            <div className="bg-gray-50 p-6 rounded-lg border-2 border-dashed border-gray-300 text-center">
+              <PiggyBank className="w-12 h-12 text-gray-400 mx-auto mb-3" />
+              <p className="text-sm text-gray-600">
+                Introduce la <strong>cantidad necesaria</strong> y tu <strong>ahorro mensual</strong> para calcular cuánto tiempo necesitas.
+              </p>
+            </div>
+          )}
+        </CardContent>
+      </Card>
 
       {/* Disclaimer */}
       <Card className="bg-amber-50 border-amber-300">
