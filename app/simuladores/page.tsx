@@ -3,7 +3,9 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import MortgageSimulator from '@/components/simulators/MortgageSimulator';
 import PurchaseCostsSimulator from '@/components/simulators/PurchaseCostsSimulator';
 import DebtCapacitySimulator from '@/components/simulators/DebtCapacitySimulator';
-import { Calculator, FileText, TrendingUp, Wallet } from 'lucide-react';
+import TaxCalculator from '@/components/simulators/TaxCalculator';
+import RenovationCalculator from '@/components/simulators/RenovationCalculator';
+import { Calculator, FileText, TrendingUp, Wallet, DollarSign, Hammer } from 'lucide-react';
 
 export const metadata: Metadata = {
   title: 'Simuladores Financieros | HABITY',
@@ -29,27 +31,41 @@ export default function SimulatorsPage() {
 
         {/* Tabs */}
         <Tabs defaultValue="mortgage" className="w-full">
-          <TabsList className="grid w-full max-w-5xl mx-auto grid-cols-3 mb-8 h-auto p-1">
+          <TabsList className="grid w-full max-w-7xl mx-auto grid-cols-2 md:grid-cols-3 lg:grid-cols-5 mb-8 h-auto p-1 gap-1">
             <TabsTrigger
               value="mortgage"
-              className="flex items-center gap-2 py-3 text-base data-[state=active]:bg-blue-500 data-[state=active]:text-white"
+              className="flex items-center gap-2 py-3 text-sm md:text-base data-[state=active]:bg-blue-500 data-[state=active]:text-white"
             >
-              <TrendingUp className="w-5 h-5" />
+              <TrendingUp className="w-4 h-4 md:w-5 md:h-5" />
               <span className="hidden sm:inline">Simulador de</span> Hipoteca
             </TabsTrigger>
             <TabsTrigger
               value="costs"
-              className="flex items-center gap-2 py-3 text-base data-[state=active]:bg-green-500 data-[state=active]:text-white"
+              className="flex items-center gap-2 py-3 text-sm md:text-base data-[state=active]:bg-green-500 data-[state=active]:text-white"
             >
-              <FileText className="w-5 h-5" />
-              <span className="hidden sm:inline">Gastos de</span> Compraventa
+              <FileText className="w-4 h-4 md:w-5 md:h-5" />
+              <span className="hidden sm:inline">Gastos</span> Compra
             </TabsTrigger>
             <TabsTrigger
               value="capacity"
-              className="flex items-center gap-2 py-3 text-base data-[state=active]:bg-purple-500 data-[state=active]:text-white"
+              className="flex items-center gap-2 py-3 text-sm md:text-base data-[state=active]:bg-purple-500 data-[state=active]:text-white"
             >
-              <Wallet className="w-5 h-5" />
-              <span className="hidden sm:inline">Capacidad</span> Endeudamiento
+              <Wallet className="w-4 h-4 md:w-5 md:h-5" />
+              <span className="hidden sm:inline">Capacidad</span> Deuda
+            </TabsTrigger>
+            <TabsTrigger
+              value="tax"
+              className="flex items-center gap-2 py-3 text-sm md:text-base data-[state=active]:bg-indigo-500 data-[state=active]:text-white"
+            >
+              <DollarSign className="w-4 h-4 md:w-5 md:h-5" />
+              <span className="hidden sm:inline">Calculadora</span> Fiscal
+            </TabsTrigger>
+            <TabsTrigger
+              value="renovation"
+              className="flex items-center gap-2 py-3 text-sm md:text-base data-[state=active]:bg-orange-500 data-[state=active]:text-white"
+            >
+              <Hammer className="w-4 h-4 md:w-5 md:h-5" />
+              <span className="hidden sm:inline">Calculadora</span> Reforma
             </TabsTrigger>
           </TabsList>
 
@@ -63,6 +79,14 @@ export default function SimulatorsPage() {
 
           <TabsContent value="capacity" className="mt-0">
             <DebtCapacitySimulator />
+          </TabsContent>
+
+          <TabsContent value="tax" className="mt-0">
+            <TaxCalculator />
+          </TabsContent>
+
+          <TabsContent value="renovation" className="mt-0">
+            <RenovationCalculator />
           </TabsContent>
         </Tabs>
 
