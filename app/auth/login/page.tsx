@@ -34,17 +34,8 @@ function LoginForm() {
       if (result?.error) {
         setError(result.error)
       } else if (result?.ok) {
-        // Verificar sesión y redirigir
-        const session = await getSession()
-        if (session?.user) {
-          if (!session.user.onboardingCompleted) {
-            router.push('/onboarding')
-          } else if (!session.user.emailVerified) {
-            router.push('/auth/verify-email')
-          } else {
-            router.push(callbackUrl)
-          }
-        }
+        // Redirigir inmediatamente
+        window.location.href = callbackUrl
       }
     } catch (error: any) {
       console.error('Login error:', error)
