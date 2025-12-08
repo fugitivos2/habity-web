@@ -5,29 +5,52 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { calculatePurchaseCosts, AUTONOMOUS_REGIONS, type Region } from '@/lib/simulators/purchase-costs';
-import type { PurchaseCostsParams, PurchaseCostsResult } from '@/lib/simulators/purchase-costs';
-import { FileText, Scale, Building2, Wallet, PiggyBank, Calculator } from 'lucide-react';
+import { AUTONOMOUS_REGIONS, type Region } from '@/lib/simulators/purchase-costs';
+import { FileText, Scale, Building2, Calculator, AlertCircle } from 'lucide-react';
 
 export default function PurchaseCostsSimulator() {
-  const [params, setParams] = useState<PurchaseCostsParams>({
-    propertyPrice: 250000,
-    region: 'Madrid',
-    isNewProperty: false,
-    hasMortgage: true,
-  });
+  // Estados principales
+  const [propertyPrice, setPropertyPrice] = useState(250000);
+  const [region, setRegion] = useState<Region>('Madrid');
+  const [isNewProperty, setIsNewProperty] = useState(false);
+  
+  // Gastos adicionales EDITABLES (como en la landing)
+  const [notaryFee, setNotaryFee] = useState(1250);
+  const [registryFee, setRegistryFee] = useState(1000);
+  const [appraisalFee, setAppraisalFee] = useState(300);
+  const [gestorFee, setGestorFee] = useState(600);
+  const [agencyCommission, setAgencyCommission] = useState(0);
 
-  const [result, setResult] = useState<PurchaseCostsResult | null>(null);
-
-  // Calcular automáticamente cuando cambien los parámetros
-  useEffect(() => {
-    const calculationResult = calculatePurchaseCosts(params);
-    setResult(calculationResult);
-  }, [params]);
-
-  const handleInputChange = (field: keyof PurchaseCostsParams, value: any) => {
-    setParams(prev => ({ ...prev, [field]: value }));
+  // Cálculo automático de ITP/IVA
+  const calculateTax = () => {
+    const regionData = AUTONOMOUS_REGIONS[region];
+    let tax = 0;
+    let taxName = '';
+    
+    if (isNewProperty) {
+      // Vivienda nueva: IVA (10%) + AJD
+      if (region === 'Ceuta' || region === 'Melilla') {
+        tax = propertyPrice * 0.005; // IPSI 0.5%
+        taxName = 'IPSI (0.5%)';
+      } else {
+        const iva = propertyPrice * 0.10; // IVA 10%
+        const ajd = propertyPrice * (regionData.ajdRate / 100);
+        tax = iva + ajd;
+        taxName = `IVA (10%) + AJD (${regionData.ajdRate}%)`;
+      }
+    } else {
+      // Vivienda de segunda mano: ITP según comunidad
+      tax = propertyPrice * (regionData.itpRate / 100);
+      taxName = `ITP (${regionData.itpRate}%)`;
+    }
+    
+    return { tax, taxName };
   };
+
+  const { tax, taxName } = calculateTax();
+
+  // Total de gastos
+  const totalCosts = notaryFee + registryFee + appraisalFee + tax + gestorFee + agencyCommission;
 
   const formatCurrency = (value: number) => {
     return new Intl.NumberFormat('es-ES', {
@@ -38,26 +61,24 @@ export default function PurchaseCostsSimulator() {
     }).format(value);
   };
 
-  const formatPercent = (value: number) => {
-    return `${value.toFixed(2)}%`;
-  };
-
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center gap-3">
-        <div className="p-3 bg-green-100 rounded-lg">
-          <FileText className="w-6 h-6 text-green-600" />
-        </div>
-        <div>
-          <h2 className="text-2xl font-bold text-gray-900">Calculadora de Gastos de Compraventa</h2>
-          <p className="text-sm text-gray-600">Calcula todos los gastos asociados a tu compra</p>
-        </div>
-      </div>
+      <Card className="bg-gradient-to-br from-green-50 to-white border-green-200">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2 text-2xl">
+            <Calculator className="w-6 h-6 text-green-600" />
+            Calculadora de Gastos de Compraventa
+          </CardTitle>
+          <CardDescription className="text-base">
+            Calcula todos los gastos asociados a la compra de tu vivienda
+          </CardDescription>
+        </CardHeader>
+      </Card>
 
       <div className="grid lg:grid-cols-2 gap-6">
         {/* Panel de Parámetros */}
-        <Card className="border-2">
+        <Card className="border-2 border-green-200">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Building2 className="w-5 h-5 text-green-600" />
@@ -75,16 +96,16 @@ export default function PurchaseCostsSimulator() {
                 <Input
                   id="propertyPrice"
                   type="number"
-                  value={params.propertyPrice}
-                  onChange={(e) => handleInputChange('propertyPrice', Number(e.target.value))}
+                  value={propertyPrice}
+                  onChange={(e) => setPropertyPrice(Number(e.target.value))}
                   className="text-right font-mono text-lg"
                   min={10000}
                   max={5000000}
                   step={5000}
                 />
-                <span className="text-sm text-gray-600">€</span>
+                <span className="text-sm text-gray-600 font-medium">€</span>
               </div>
-              <p className="text-xs text-gray-500">{formatCurrency(params.propertyPrice)}</p>
+              <p className="text-xs text-gray-500">{formatCurrency(propertyPrice)}</p>
             </div>
 
             {/* Comunidad Autónoma */}
@@ -93,24 +114,23 @@ export default function PurchaseCostsSimulator() {
                 Comunidad Autónoma
               </Label>
               <Select
-                value={params.region}
-                onValueChange={(value) => handleInputChange('region', value as Region)}
+                value={region}
+                onValueChange={(value) => setRegion(value as Region)}
               >
-                <SelectTrigger id="region" className="w-full">
+                <SelectTrigger id="region" className="w-full bg-white">
                   <SelectValue placeholder="Selecciona una comunidad" />
                 </SelectTrigger>
-                <SelectContent className="max-h-80">
-                  {Object.keys(AUTONOMOUS_REGIONS).map((region) => (
-                    <SelectItem key={region} value={region}>
-                      {region} ({formatPercent(AUTONOMOUS_REGIONS[region as Region].itpRate)})
+                <SelectContent className="max-h-80 bg-white">
+                  {Object.keys(AUTONOMOUS_REGIONS).map((r) => (
+                    <SelectItem key={r} value={r}>
+                      {r} - ITP {AUTONOMOUS_REGIONS[r as Region].itpRate}%
                     </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
               <p className="text-xs text-gray-500">
-                ITP aplicable: {formatPercent(AUTONOMOUS_REGIONS[params.region].itpRate)}
-                {params.region === 'Ceuta' && ' (Bonificado del 6% al 3%)'}
-                {params.region === 'Melilla' && ' (Bonificado del 6% al 3%)'}
+                ITP aplicable: {AUTONOMOUS_REGIONS[region].itpRate}%
+                {(region === 'Ceuta' || region === 'Melilla') && ' (Bonificado del 6% al 3%)'}
               </p>
             </div>
 
@@ -120,23 +140,9 @@ export default function PurchaseCostsSimulator() {
               <div className="grid grid-cols-2 gap-3">
                 <button
                   type="button"
-                  onClick={() => handleInputChange('isNewProperty', true)}
+                  onClick={() => setIsNewProperty(false)}
                   className={`p-4 rounded-lg border-2 transition-all ${
-                    params.isNewProperty
-                      ? 'border-green-500 bg-green-50 text-green-700'
-                      : 'border-gray-200 bg-white text-gray-700 hover:border-gray-300'
-                  }`}
-                >
-                  <div className="text-center">
-                    <div className="text-sm font-semibold">Obra Nueva</div>
-                    <div className="text-xs text-gray-500 mt-1">IVA 10%</div>
-                  </div>
-                </button>
-                <button
-                  type="button"
-                  onClick={() => handleInputChange('isNewProperty', false)}
-                  className={`p-4 rounded-lg border-2 transition-all ${
-                    !params.isNewProperty
+                    !isNewProperty
                       ? 'border-green-500 bg-green-50 text-green-700'
                       : 'border-gray-200 bg-white text-gray-700 hover:border-gray-300'
                   }`}
@@ -146,41 +152,130 @@ export default function PurchaseCostsSimulator() {
                     <div className="text-xs text-gray-500 mt-1">ITP</div>
                   </div>
                 </button>
+                <button
+                  type="button"
+                  onClick={() => setIsNewProperty(true)}
+                  className={`p-4 rounded-lg border-2 transition-all ${
+                    isNewProperty
+                      ? 'border-green-500 bg-green-50 text-green-700'
+                      : 'border-gray-200 bg-white text-gray-700 hover:border-gray-300'
+                  }`}
+                >
+                  <div className="text-center">
+                    <div className="text-sm font-semibold">Obra Nueva</div>
+                    <div className="text-xs text-gray-500 mt-1">IVA 10%</div>
+                  </div>
+                </button>
               </div>
             </div>
 
-            {/* ¿Necesitas Hipoteca? */}
-            <div className="space-y-2">
-              <Label className="text-sm font-semibold">¿Necesitas Hipoteca?</Label>
-              <div className="grid grid-cols-2 gap-3">
-                <button
-                  type="button"
-                  onClick={() => handleInputChange('hasMortgage', true)}
-                  className={`p-3 rounded-lg border-2 transition-all ${
-                    params.hasMortgage
-                      ? 'border-green-500 bg-green-50 text-green-700'
-                      : 'border-gray-200 bg-white text-gray-700 hover:border-gray-300'
-                  }`}
-                >
-                  <div className="text-sm font-semibold text-center">Sí</div>
-                </button>
-                <button
-                  type="button"
-                  onClick={() => handleInputChange('hasMortgage', false)}
-                  className={`p-3 rounded-lg border-2 transition-all ${
-                    !params.hasMortgage
-                      ? 'border-green-500 bg-green-50 text-green-700'
-                      : 'border-gray-200 bg-white text-gray-700 hover:border-gray-300'
-                  }`}
-                >
-                  <div className="text-sm font-semibold text-center">No</div>
-                </button>
-              </div>
-              <p className="text-xs text-gray-500">
-                {params.hasMortgage
-                  ? 'Se incluirán gastos de gestoría y registro hipotecario'
-                  : 'Solo gastos de compraventa'}
+            {/* Gastos adicionales EDITABLES */}
+            <div className="space-y-4 bg-gray-50 p-4 rounded-lg border-2 border-gray-200">
+              <p className="text-xs font-semibold text-gray-600 uppercase mb-3">
+                Gastos adicionales (editables)
               </p>
+              
+              <div className="grid grid-cols-2 gap-3">
+                {/* Notaría */}
+                <div className="space-y-1">
+                  <Label htmlFor="notaryFee" className="text-xs font-medium text-gray-600">
+                    Notaría
+                  </Label>
+                  <div className="flex items-center gap-1">
+                    <Input
+                      id="notaryFee"
+                      type="number"
+                      min="0"
+                      max="5000"
+                      step="50"
+                      value={notaryFee}
+                      onChange={(e) => setNotaryFee(Number(e.target.value))}
+                      className="text-sm font-medium"
+                    />
+                    <span className="text-xs text-gray-500">€</span>
+                  </div>
+                </div>
+
+                {/* Registro */}
+                <div className="space-y-1">
+                  <Label htmlFor="registryFee" className="text-xs font-medium text-gray-600">
+                    Registro
+                  </Label>
+                  <div className="flex items-center gap-1">
+                    <Input
+                      id="registryFee"
+                      type="number"
+                      min="0"
+                      max="5000"
+                      step="50"
+                      value={registryFee}
+                      onChange={(e) => setRegistryFee(Number(e.target.value))}
+                      className="text-sm font-medium"
+                    />
+                    <span className="text-xs text-gray-500">€</span>
+                  </div>
+                </div>
+
+                {/* Tasación */}
+                <div className="space-y-1">
+                  <Label htmlFor="appraisalFee" className="text-xs font-medium text-gray-600">
+                    Tasación
+                  </Label>
+                  <div className="flex items-center gap-1">
+                    <Input
+                      id="appraisalFee"
+                      type="number"
+                      min="0"
+                      max="2000"
+                      step="50"
+                      value={appraisalFee}
+                      onChange={(e) => setAppraisalFee(Number(e.target.value))}
+                      className="text-sm font-medium"
+                    />
+                    <span className="text-xs text-gray-500">€</span>
+                  </div>
+                </div>
+
+                {/* Gestoría */}
+                <div className="space-y-1">
+                  <Label htmlFor="gestorFee" className="text-xs font-medium text-gray-600">
+                    Gestoría
+                  </Label>
+                  <div className="flex items-center gap-1">
+                    <Input
+                      id="gestorFee"
+                      type="number"
+                      min="0"
+                      max="2000"
+                      step="50"
+                      value={gestorFee}
+                      onChange={(e) => setGestorFee(Number(e.target.value))}
+                      className="text-sm font-medium"
+                    />
+                    <span className="text-xs text-gray-500">€</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Comisión Inmobiliaria */}
+              <div className="space-y-1">
+                <Label htmlFor="agencyCommission" className="text-xs font-medium text-gray-600">
+                  Comisión Inmobiliaria (opcional)
+                </Label>
+                <div className="flex items-center gap-2">
+                  <Input
+                    id="agencyCommission"
+                    type="number"
+                    min="0"
+                    max="50000"
+                    step="100"
+                    value={agencyCommission}
+                    onChange={(e) => setAgencyCommission(Number(e.target.value))}
+                    className="text-sm font-medium"
+                  />
+                  <span className="text-xs text-gray-500">€</span>
+                </div>
+              </div>
             </div>
           </CardContent>
         </Card>
@@ -191,136 +286,106 @@ export default function PurchaseCostsSimulator() {
           <Card className="border-2 border-green-500 bg-gradient-to-br from-green-50 to-white">
             <CardHeader>
               <CardTitle className="flex items-center gap-2 text-green-700">
-                <PiggyBank className="w-6 h-6" />
+                <Scale className="w-6 h-6" />
                 Total Gastos de Compra
               </CardTitle>
             </CardHeader>
             <CardContent>
               <div className="text-5xl font-bold text-green-600 mb-2">
-                {result ? formatCurrency(result.totalCosts) : '---'}
+                {formatCurrency(totalCosts)}
               </div>
               <div className="flex justify-between items-center text-sm text-gray-600">
                 <span>Sobre precio de venta</span>
                 <span className="font-semibold">
-                  {result ? formatPercent((result.totalCosts / params.propertyPrice) * 100) : '---'}
+                  {((totalCosts / propertyPrice) * 100).toFixed(1)}%
                 </span>
               </div>
             </CardContent>
           </Card>
 
           {/* Desglose de Gastos */}
-          {result && (
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Calculator className="w-5 h-5 text-blue-600" />
-                  Desglose Detallado
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                {/* ITP o IVA + AJD */}
-                <div className="space-y-2">
-                  {params.isNewProperty ? (
-                    <>
-                      <div className="flex justify-between items-center p-3 bg-blue-50 rounded-lg">
-                        <div className="flex items-center gap-2">
-                          <Scale className="w-4 h-4 text-blue-500" />
-                          <span className="text-sm font-medium text-gray-700">IVA (10%)</span>
-                        </div>
-                        <span className="text-base font-bold text-blue-600">
-                          {formatCurrency(result.ivaAJD)}
-                        </span>
-                      </div>
-                      <div className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
-                        <div className="flex items-center gap-2">
-                          <FileText className="w-4 h-4 text-gray-500" />
-                          <span className="text-sm font-medium text-gray-700">
-                            AJD ({formatPercent(AUTONOMOUS_REGIONS[params.region].ajdRate)})
-                          </span>
-                        </div>
-                        <span className="text-base font-bold text-gray-900">
-                          {formatCurrency(result.itpTransfer)}
-                        </span>
-                      </div>
-                    </>
-                  ) : (
-                    <div className="flex justify-between items-center p-3 bg-purple-50 rounded-lg">
-                      <div className="flex items-center gap-2">
-                        <Scale className="w-4 h-4 text-purple-500" />
-                        <span className="text-sm font-medium text-gray-700">
-                          ITP ({formatPercent(AUTONOMOUS_REGIONS[params.region].itpRate)})
-                        </span>
-                      </div>
-                      <span className="text-base font-bold text-purple-600">
-                        {formatCurrency(result.itpTransfer)}
-                      </span>
-                    </div>
-                  )}
-                </div>
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <FileText className="w-5 h-5 text-blue-600" />
+                Desglose Detallado
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              {/* Notaría */}
+              <div className="flex justify-between items-center p-3 bg-orange-50 rounded-lg">
+                <span className="text-sm font-medium text-gray-700">Notaría</span>
+                <span className="text-lg font-bold text-orange-600">
+                  {formatCurrency(notaryFee)}
+                </span>
+              </div>
 
-                {/* Notaría */}
-                <div className="flex justify-between items-center p-3 bg-orange-50 rounded-lg">
-                  <div className="flex items-center gap-2">
-                    <FileText className="w-4 h-4 text-orange-500" />
-                    <span className="text-sm font-medium text-gray-700">Notaría</span>
-                  </div>
-                  <span className="text-base font-bold text-orange-600">
-                    {formatCurrency(result.notaryCosts)}
+              {/* Registro */}
+              <div className="flex justify-between items-center p-3 bg-indigo-50 rounded-lg">
+                <span className="text-sm font-medium text-gray-700">Registro Propiedad</span>
+                <span className="text-lg font-bold text-indigo-600">
+                  {formatCurrency(registryFee)}
+                </span>
+              </div>
+
+              {/* Tasación */}
+              <div className="flex justify-between items-center p-3 bg-blue-50 rounded-lg">
+                <span className="text-sm font-medium text-gray-700">Tasación</span>
+                <span className="text-lg font-bold text-blue-600">
+                  {formatCurrency(appraisalFee)}
+                </span>
+              </div>
+
+              {/* ITP o IVA + AJD */}
+              <div className="flex justify-between items-center p-3 bg-purple-50 rounded-lg">
+                <span className="text-sm font-medium text-gray-700">{taxName}</span>
+                <span className="text-lg font-bold text-purple-600">
+                  {formatCurrency(tax)}
+                </span>
+              </div>
+
+              {/* Gestoría */}
+              <div className="flex justify-between items-center p-3 bg-teal-50 rounded-lg">
+                <span className="text-sm font-medium text-gray-700">Gestoría</span>
+                <span className="text-lg font-bold text-teal-600">
+                  {formatCurrency(gestorFee)}
+                </span>
+              </div>
+
+              {/* Comisión Inmobiliaria (solo si > 0) */}
+              {agencyCommission > 0 && (
+                <div className="flex justify-between items-center p-3 bg-pink-50 rounded-lg">
+                  <span className="text-sm font-medium text-gray-700">Comisión Inmobiliaria</span>
+                  <span className="text-lg font-bold text-pink-600">
+                    {formatCurrency(agencyCommission)}
                   </span>
                 </div>
+              )}
 
-                {/* Registro */}
-                <div className="flex justify-between items-center p-3 bg-indigo-50 rounded-lg">
-                  <div className="flex items-center gap-2">
-                    <Building2 className="w-4 h-4 text-indigo-500" />
-                    <span className="text-sm font-medium text-gray-700">Registro Propiedad</span>
-                  </div>
-                  <span className="text-base font-bold text-indigo-600">
-                    {formatCurrency(result.registryCosts)}
+              {/* Total */}
+              <div className="pt-3 border-t-2 border-gray-200">
+                <div className="flex justify-between items-center p-4 bg-green-100 rounded-lg">
+                  <span className="text-base font-bold text-gray-900">TOTAL GASTOS</span>
+                  <span className="text-2xl font-bold text-green-600">
+                    {formatCurrency(totalCosts)}
                   </span>
                 </div>
-
-                {/* Gestoría (solo si hay hipoteca) */}
-                {params.hasMortgage && result.agencyCosts > 0 && (
-                  <div className="flex justify-between items-center p-3 bg-teal-50 rounded-lg">
-                    <div className="flex items-center gap-2">
-                      <Wallet className="w-4 h-4 text-teal-500" />
-                      <span className="text-sm font-medium text-gray-700">Gestoría</span>
-                    </div>
-                    <span className="text-base font-bold text-teal-600">
-                      {formatCurrency(result.agencyCosts)}
-                    </span>
-                  </div>
-                )}
-
-                {/* Total */}
-                <div className="pt-3 border-t-2 border-gray-200">
-                  <div className="flex justify-between items-center p-4 bg-green-100 rounded-lg">
-                    <span className="text-base font-bold text-gray-900">TOTAL GASTOS</span>
-                    <span className="text-2xl font-bold text-green-600">
-                      {formatCurrency(result.totalCosts)}
-                    </span>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          )}
+              </div>
+            </CardContent>
+          </Card>
 
           {/* Información Adicional */}
-          <Card className="bg-blue-50 border-blue-200">
+          <Card className="bg-amber-50 border-amber-200">
             <CardContent className="pt-6">
-              <div className="flex gap-2">
-                <span className="text-blue-600">ℹ️</span>
-                <div className="text-sm text-blue-800">
-                  <p className="font-semibold mb-2">Recuerda:</p>
-                  <ul className="space-y-1 list-disc list-inside">
-                    <li>Estos gastos son orientativos y pueden variar</li>
-                    <li>Los gastos de notaría y registro dependen del valor de la operación</li>
-                    {params.hasMortgage && (
-                      <li>Si solicitas hipoteca, deberás sumar los gastos bancarios adicionales</li>
-                    )}
-                    <li>En algunas comunidades pueden existir bonificaciones fiscales</li>
-                  </ul>
+              <div className="flex items-start gap-2">
+                <AlertCircle className="w-4 h-4 text-amber-600 mt-0.5 flex-shrink-0" />
+                <div className="text-sm text-amber-800">
+                  <p className="font-semibold mb-2">⚠️ Nota importante:</p>
+                  <p className="leading-relaxed">
+                    Los cálculos mostrados son estimados y pueden variar según cada caso particular. 
+                    Los gastos de notaría y registro dependen del valor de la operación. 
+                    Consulta con un profesional para obtener cifras exactas.
+                  </p>
                 </div>
               </div>
             </CardContent>
