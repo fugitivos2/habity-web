@@ -5,7 +5,7 @@ import PurchaseCostsSimulator from '@/components/simulators/PurchaseCostsSimulat
 import DebtCapacitySimulator from '@/components/simulators/DebtCapacitySimulator';
 import TaxCalculator from '@/components/simulators/TaxCalculator';
 import RenovationCalculator from '@/components/simulators/RenovationCalculator';
-import { Calculator, FileText, TrendingUp, Wallet, DollarSign, Hammer } from 'lucide-react';
+import { Calculator, FileText, TrendingUp, Wallet, Euro, Hammer } from 'lucide-react';
 
 export const metadata: Metadata = {
   title: 'Simuladores Financieros | HABITY',
@@ -57,7 +57,7 @@ export default function SimulatorsPage() {
               value="tax"
               className="flex items-center gap-2 py-3 text-sm md:text-base data-[state=active]:bg-indigo-500 data-[state=active]:text-white"
             >
-              <DollarSign className="w-4 h-4 md:w-5 md:h-5" />
+              <Euro className="w-4 h-4 md:w-5 md:h-5" />
               <span className="hidden sm:inline">Calculadora</span> Fiscal
             </TabsTrigger>
             <TabsTrigger

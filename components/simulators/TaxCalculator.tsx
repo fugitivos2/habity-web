@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
@@ -8,7 +8,6 @@ import { Separator } from '@/components/ui/separator';
 import { Calculator, TrendingUp, Home, AlertCircle, Euro, Plus, X } from 'lucide-react';
 
 // Tipos de IRPF por ganancia patrimonial (2024)
-// Tramos progresivos según la ganancia
 const IRPF_BRACKETS = [
   { max: 6000, rate: 19 },
   { max: 50000, rate: 21 },
@@ -17,14 +16,12 @@ const IRPF_BRACKETS = [
   { max: Infinity, rate: 28 }
 ];
 
-// Tipos de gastos de compra
 interface PurchaseExpense {
   id: string;
   name: string;
   amount: number;
 }
 
-// Tipos de gastos de venta
 interface SaleExpense {
   id: string;
   name: string;
@@ -46,25 +43,23 @@ export default function TaxCalculator() {
   // Estados de venta
   const [salePrice, setSalePrice] = useState(280000);
   const [saleExpenses, setSaleExpenses] = useState<SaleExpense[]>([
-    { id: '1', name: 'Comisión Inmobiliaria', amount: 8400 }, // 3% típico
-    { id: '2', name: 'Certificado Energético', amount: 150 },
-    { id: '3', name: 'Plusvalía Municipal (pago)', amount: 0 } // Se calcula después
+    { id: '1', name: 'Comisión Inmobiliaria', amount: 8400 },
+    { id: '2', name: 'Certificado Energético', amount: 150 }
   ]);
 
   // Plusvalía municipal
-  const [cityTaxRate, setCityTaxRate] = useState(3.0); // % anual (varía por municipio)
+  const [cityTaxRate, setCityTaxRate] = useState(3.0);
 
-  // Reinversión en vivienda habitual
+  // Reinversión
   const [isReinvestment, setIsReinvestment] = useState(false);
 
-  // Funciones para gastos de compra
+  // Funciones gastos compra
   const addPurchaseExpense = () => {
-    const newExpense: PurchaseExpense = {
+    setPurchaseExpenses([...purchaseExpenses, {
       id: Date.now().toString(),
       name: '',
       amount: 0
-    };
-    setPurchaseExpenses([...purchaseExpenses, newExpense]);
+    }]);
   };
 
   const removePurchaseExpense = (id: string) => {
@@ -77,14 +72,13 @@ export default function TaxCalculator() {
     ));
   };
 
-  // Funciones para gastos de venta
+  // Funciones gastos venta
   const addSaleExpense = () => {
-    const newExpense: SaleExpense = {
+    setSaleExpenses([...saleExpenses, {
       id: Date.now().toString(),
       name: '',
       amount: 0
-    };
-    setSaleExpenses([...saleExpenses, newExpense]);
+    }]);
   };
 
   const removeSaleExpense = (id: string) => {
@@ -99,16 +93,12 @@ export default function TaxCalculator() {
 
   // Cálculos
   const calculateTaxes = () => {
-    // Calcular totales de gastos
     const totalPurchaseCosts = purchaseExpenses.reduce((sum, exp) => sum + exp.amount, 0);
     const totalSaleCosts = saleExpenses.reduce((sum, exp) => sum + exp.amount, 0);
 
-    // 1. GANANCIA PATRIMONIAL
-    // Ganancia = Precio Venta - (Precio Compra + Gastos Compra + Gastos Venta)
     const totalAcquisitionCost = purchasePrice + totalPurchaseCosts;
     const capitalGain = salePrice - totalAcquisitionCost - totalSaleCosts;
 
-    // 2. IRPF (solo si NO se reinvierte en vivienda habitual)
     let irpfTax = 0;
     if (!isReinvestment && capitalGain > 0) {
       let remainingGain = capitalGain;
@@ -116,31 +106,20 @@ export default function TaxCalculator() {
 
       for (const bracket of IRPF_BRACKETS) {
         if (remainingGain <= 0) break;
-        
         const taxableInBracket = Math.min(remainingGain, bracket.max - previousMax);
         irpfTax += taxableInBracket * (bracket.rate / 100);
-        
         remainingGain -= taxableInBracket;
         previousMax = bracket.max;
       }
     }
 
-    // 3. PLUSVALÍA MUNICIPAL
-    // Base imponible = Valor catastral del suelo (aprox 20% del precio compra)
     const cadastralValue = purchasePrice * 0.20;
-    
-    // Incremento según años (máximo 20 años)
     const effectiveYears = Math.min(yearsOwned, 20);
     const municipalGainBase = cadastralValue * (cityTaxRate / 100) * effectiveYears;
-    
-    // Tipo impositivo municipal (suele ser 30%, editable implícitamente en cityTaxRate)
-    const municipalTaxRate = 30; // %
+    const municipalTaxRate = 30;
     const plusvaliaTax = municipalGainBase * (municipalTaxRate / 100);
 
-    // 4. TOTAL A PAGAR
     const totalTax = irpfTax + plusvaliaTax;
-
-    // 5. GANANCIA NETA (después de impuestos)
     const netGain = capitalGain - totalTax;
 
     return {
@@ -168,7 +147,6 @@ export default function TaxCalculator() {
 
   return (
     <div className="space-y-6">
-      {/* Header */}
       <Card className="bg-gradient-to-br from-purple-50 to-white border-purple-200">
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-2xl">
@@ -182,7 +160,6 @@ export default function TaxCalculator() {
       </Card>
 
       <div className="grid lg:grid-cols-2 gap-6">
-        {/* Panel de Parámetros */}
         <div className="space-y-4">
           {/* DATOS DE COMPRA */}
           <Card className="border-2 border-blue-200">
@@ -193,7 +170,6 @@ export default function TaxCalculator() {
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-              {/* Precio de compra */}
               <div className="space-y-2">
                 <Label htmlFor="purchasePrice" className="font-semibold">
                   Precio de compra
@@ -214,7 +190,6 @@ export default function TaxCalculator() {
 
               <Separator />
 
-              {/* Gastos de compra - DESGLOSADOS */}
               <div className="space-y-3">
                 <div className="flex items-center justify-between">
                   <Label className="font-semibold">💸 Gastos de compra (desglose)</Label>
@@ -264,7 +239,6 @@ export default function TaxCalculator() {
                   </div>
                 ))}
 
-                {/* Total gastos compra */}
                 <div className="bg-blue-100 p-3 rounded-lg">
                   <div className="flex justify-between items-center">
                     <span className="text-sm font-semibold text-blue-900">Total gastos compra:</span>
@@ -275,7 +249,6 @@ export default function TaxCalculator() {
 
               <Separator />
 
-              {/* Años de propiedad */}
               <div className="space-y-2">
                 <Label htmlFor="yearsOwned" className="font-semibold">
                   Años de propiedad
@@ -307,7 +280,6 @@ export default function TaxCalculator() {
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-              {/* Precio de venta */}
               <div className="space-y-2">
                 <Label htmlFor="salePrice" className="font-semibold">
                   Precio de venta
@@ -328,7 +300,6 @@ export default function TaxCalculator() {
 
               <Separator />
 
-              {/* Gastos de venta - DESGLOSADOS */}
               <div className="space-y-3">
                 <div className="flex items-center justify-between">
                   <Label className="font-semibold">💸 Gastos de venta (desglose)</Label>
@@ -378,7 +349,6 @@ export default function TaxCalculator() {
                   </div>
                 ))}
 
-                {/* Total gastos venta */}
                 <div className="bg-green-100 p-3 rounded-lg">
                   <div className="flex justify-between items-center">
                     <span className="text-sm font-semibold text-green-900">Total gastos venta:</span>
@@ -389,7 +359,6 @@ export default function TaxCalculator() {
 
               <Separator />
 
-              {/* Tasa plusvalía municipal */}
               <div className="space-y-2">
                 <Label htmlFor="cityTaxRate" className="font-semibold">
                   Coeficiente plusvalía municipal (%)
@@ -445,9 +414,8 @@ export default function TaxCalculator() {
           </Card>
         </div>
 
-        {/* Panel de Resultados */}
+        {/* Panel Resultados */}
         <div className="space-y-4">
-          {/* Ganancia Patrimonial */}
           <Card className="border-2 border-purple-300 bg-gradient-to-br from-purple-50 to-white">
             <CardHeader>
               <CardTitle className="flex items-center gap-2 text-purple-700">
@@ -465,7 +433,6 @@ export default function TaxCalculator() {
             </CardContent>
           </Card>
 
-          {/* Desglose de Impuestos */}
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
@@ -474,7 +441,6 @@ export default function TaxCalculator() {
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-3">
-              {/* IRPF */}
               <div className="flex justify-between items-center p-3 bg-blue-50 rounded-lg">
                 <div className="flex flex-col">
                   <span className="text-sm font-medium text-gray-700">
@@ -496,7 +462,6 @@ export default function TaxCalculator() {
                 </span>
               </div>
 
-              {/* Plusvalía Municipal */}
               <div className="flex justify-between items-center p-3 bg-orange-50 rounded-lg">
                 <div className="flex flex-col">
                   <span className="text-sm font-medium text-gray-700">
@@ -513,7 +478,6 @@ export default function TaxCalculator() {
 
               <Separator />
 
-              {/* Total Impuestos */}
               <div className="flex justify-between items-center p-4 bg-red-100 rounded-lg">
                 <span className="text-base font-bold text-gray-900">TOTAL IMPUESTOS</span>
                 <span className="text-2xl font-bold text-red-600">
@@ -521,14 +485,12 @@ export default function TaxCalculator() {
                 </span>
               </div>
 
-              {/* Tipo efectivo */}
               <div className="text-center text-sm text-gray-600">
                 Tipo efectivo: <strong>{result.effectiveRate.toFixed(2)}%</strong> sobre la ganancia
               </div>
             </CardContent>
           </Card>
 
-          {/* Ganancia Neta */}
           <Card className="border-2 border-green-500 bg-gradient-to-br from-green-50 to-white">
             <CardHeader>
               <CardTitle className="flex items-center gap-2 text-green-700">
@@ -546,7 +508,6 @@ export default function TaxCalculator() {
             </CardContent>
           </Card>
 
-          {/* Información Adicional */}
           <Card className="bg-amber-50 border-amber-200">
             <CardContent className="pt-6">
               <div className="flex items-start gap-2">
@@ -555,8 +516,8 @@ export default function TaxCalculator() {
                   <p className="font-semibold mb-2">⚠️ Importante:</p>
                   <ul className="space-y-1 list-disc list-inside leading-relaxed">
                     <li>Los cálculos son estimados y orientativos</li>
-                    <li>El coeficiente de plusvalía municipal varía por ayuntamiento (consulta el tuyo)</li>
-                    <li>La exención por reinversión solo aplica a vivienda habitual (no inversión)</li>
+                    <li>El coeficiente de plusvalía municipal varía por ayuntamiento</li>
+                    <li>La exención por reinversión solo aplica a vivienda habitual</li>
                     <li>Debes reinvertir en un plazo máximo de 2 años</li>
                     <li>Consulta con un asesor fiscal para tu caso específico</li>
                   </ul>

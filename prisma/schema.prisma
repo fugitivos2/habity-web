@@ -291,6 +291,8 @@ enum SimulationType {
   RATIO_ENDEUDAMIENTO // Ratio de endeudamiento
   AHORRO_OBJETIVO   // Calculadora de ahorro
   COMPARADOR        // Comparar propiedades
+  FISCAL            // Calculadora fiscal (Plusvalía + IRPF)
+  REFORMA           // Calculadora de reforma
 }
 
 model Simulation {
