@@ -72,6 +72,18 @@ export default function PurchaseCostsSimulator() {
     }).format(value);
   };
 
+  // Callback para cargar simulación guardada
+  const handleLoadSimulation = useCallback((data: any) => {
+    setPropertyPrice(data.inputData.propertyPrice || 250000);
+    setRegion(data.inputData.region || 'Madrid');
+    setIsNewProperty(data.inputData.isNewProperty || false);
+    setNotaryFee(data.inputData.notaryFee || 1250);
+    setRegistryFee(data.inputData.registryFee || 1000);
+    setAppraisalFee(data.inputData.appraisalFee || 300);
+    setGestorFee(data.inputData.gestorFee || 600);
+    setAgencyCommission(data.inputData.agencyCommission || 0);
+  }, []);
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -410,16 +422,7 @@ export default function PurchaseCostsSimulator() {
                 agencyCommission,
               },
             }}
-            onLoadSimulation={useCallback((data: any) => {
-              setPropertyPrice(data.inputData.propertyPrice || 250000);
-              setRegion(data.inputData.region || 'Madrid');
-              setIsNewProperty(data.inputData.isNewProperty || false);
-              setNotaryFee(data.inputData.notaryFee || 1250);
-              setRegistryFee(data.inputData.registryFee || 1000);
-              setAppraisalFee(data.inputData.appraisalFee || 300);
-              setGestorFee(data.inputData.gestorFee || 600);
-              setAgencyCommission(data.inputData.agencyCommission || 0);
-            }, [])}
+            onLoadSimulation={handleLoadSimulation}
             className="mb-6"
           />
 

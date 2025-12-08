@@ -146,6 +146,17 @@ export default function TaxCalculator() {
     }).format(value);
   };
 
+  // Callback para cargar simulación guardada
+  const handleLoadSimulation = useCallback((data: any) => {
+    setPurchasePrice(data.inputData.purchasePrice || 200000);
+    setPurchaseExpenses(data.inputData.purchaseExpenses || []);
+    setYearsOwned(data.inputData.yearsOwned || 5);
+    setSalePrice(data.inputData.salePrice || 280000);
+    setSaleExpenses(data.inputData.saleExpenses || []);
+    setCityTaxRate(data.inputData.cityTaxRate || 3.0);
+    setIsReinvestment(data.inputData.isReinvestment || false);
+  }, []);
+
   return (
     <div className="space-y-6">
       <Card className="bg-gradient-to-br from-purple-50 to-white border-purple-200">
@@ -524,15 +535,7 @@ export default function TaxCalculator() {
               },
               results: result,
             }}
-            onLoadSimulation={useCallback((data: any) => {
-              setPurchasePrice(data.inputData.purchasePrice || 200000);
-              setPurchaseExpenses(data.inputData.purchaseExpenses || []);
-              setYearsOwned(data.inputData.yearsOwned || 5);
-              setSalePrice(data.inputData.salePrice || 280000);
-              setSaleExpenses(data.inputData.saleExpenses || []);
-              setCityTaxRate(data.inputData.cityTaxRate || 3.0);
-              setIsReinvestment(data.inputData.isReinvestment || false);
-            }, [])}
+            onLoadSimulation={handleLoadSimulation}
             className="mb-6"
           />
 

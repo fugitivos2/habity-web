@@ -85,6 +85,26 @@ export default function RenovationCalculator() {
     }).format(value);
   };
 
+  // Callback para cargar simulación guardada
+  const handleLoadSimulation = useCallback((data: any) => {
+    setTotalArea(data.inputData.totalArea || 80);
+    setFloorArea(data.inputData.floorArea || 80);
+    setFloorPricePerM2(data.inputData.floorPricePerM2 || 40);
+    setPaintArea(data.inputData.paintArea || 200);
+    setPaintPricePerM2(data.inputData.paintPricePerM2 || 12);
+    setWindowsQuantity(data.inputData.windowsQuantity || 4);
+    setWindowPricePerUnit(data.inputData.windowPricePerUnit || 800);
+    setElectricityArea(data.inputData.electricityArea || 80);
+    setElectricityPricePerM2(data.inputData.electricityPricePerM2 || 35);
+    setPlumbingArea(data.inputData.plumbingArea || 80);
+    setPlumbingPricePerM2(data.inputData.plumbingPricePerM2 || 30);
+    setKitchenBudget(data.inputData.kitchenBudget || 5000);
+    setBathroomBudget(data.inputData.bathroomBudget || 3000);
+    setDoorsQuantity(data.inputData.doorsQuantity || 5);
+    setDoorPricePerUnit(data.inputData.doorPricePerUnit || 400);
+    setOtherCosts(data.inputData.otherCosts || 2000);
+  }, []);
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -630,24 +650,7 @@ export default function RenovationCalculator() {
                 costPerM2: totalArea > 0 ? totalCost / totalArea : 0,
               },
             }}
-            onLoadSimulation={useCallback((data: any) => {
-              setTotalArea(data.inputData.totalArea || 80);
-              setFloorArea(data.inputData.floorArea || 80);
-              setFloorPricePerM2(data.inputData.floorPricePerM2 || 40);
-              setPaintArea(data.inputData.paintArea || 200);
-              setPaintPricePerM2(data.inputData.paintPricePerM2 || 12);
-              setWindowsQuantity(data.inputData.windowsQuantity || 4);
-              setWindowPricePerUnit(data.inputData.windowPricePerUnit || 800);
-              setElectricityArea(data.inputData.electricityArea || 80);
-              setElectricityPricePerM2(data.inputData.electricityPricePerM2 || 35);
-              setPlumbingArea(data.inputData.plumbingArea || 80);
-              setPlumbingPricePerM2(data.inputData.plumbingPricePerM2 || 30);
-              setKitchenBudget(data.inputData.kitchenBudget || 5000);
-              setBathroomBudget(data.inputData.bathroomBudget || 3000);
-              setDoorsQuantity(data.inputData.doorsQuantity || 5);
-              setDoorPricePerUnit(data.inputData.doorPricePerUnit || 400);
-              setOtherCosts(data.inputData.otherCosts || 2000);
-            }, [])}
+            onLoadSimulation={handleLoadSimulation}
             className="mb-6"
           />
 

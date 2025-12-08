@@ -43,6 +43,11 @@ export default function MortgageSimulator() {
     return `${value.toFixed(2)}%`;
   };
 
+  // Callback para cargar simulación guardada
+  const handleLoadSimulation = useCallback((data: any) => {
+    setParams(data.inputData);
+  }, []);
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -291,9 +296,7 @@ export default function MortgageSimulator() {
                 inputData: params,
                 results: result,
               }}
-              onLoadSimulation={useCallback((data: any) => {
-                setParams(data.inputData);
-              }, [])}
+              onLoadSimulation={handleLoadSimulation}
             />
           )}
 

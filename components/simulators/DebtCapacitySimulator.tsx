@@ -113,7 +113,15 @@ export default function DebtCapacitySimulator() {
     ));
   };
 
-
+  // Callback para cargar simulación guardada
+  const handleLoadSimulation = useCallback((data: any) => {
+    setNetSalary(data.inputData.netSalary || 2500);
+    setExtraIncomes(data.inputData.extraIncomes || []);
+    setDebts(data.inputData.debts || []);
+    setTargetAmount(data.inputData.targetAmount || 0);
+    setCurrentSavings(data.inputData.currentSavings || 0);
+    setMonthlySavings(data.inputData.monthlySavings || 0);
+  }, []);
 
   useEffect(() => {
     calculateCapacity();
@@ -721,14 +729,7 @@ export default function DebtCapacitySimulator() {
           },
           results: results,
         }}
-        onLoadSimulation={useCallback((data: any) => {
-          setNetSalary(data.inputData.netSalary || 2500);
-          setExtraIncomes(data.inputData.extraIncomes || []);
-          setDebts(data.inputData.debts || []);
-          setTargetAmount(data.inputData.targetAmount || 0);
-          setCurrentSavings(data.inputData.currentSavings || 0);
-          setMonthlySavings(data.inputData.monthlySavings || 0);
-        }, [])}
+        onLoadSimulation={handleLoadSimulation}
         className="mb-6"
       />
 
