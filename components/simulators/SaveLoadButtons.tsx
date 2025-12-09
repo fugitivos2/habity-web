@@ -6,7 +6,9 @@
 import { useState } from 'react';
 import { useSession } from 'next-auth/react';
 import { useSimulations } from '@/hooks/useSimulations';
+import { useSimulationUsage } from '@/hooks/useSimulationUsage';
 import { Button } from '@/components/ui/button';
+import UpgradeModal from '@/components/simulations/UpgradeModal';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import {
@@ -55,16 +57,25 @@ export default function SaveLoadButtons({
 }: SaveLoadButtonsProps) {
   const { data: session } = useSession();
   const { saveSimulation, loadSimulations, simulations, loading, error, clearError, isAuthenticated } = useSimulations();
+  const { usage, refetch: refetchUsage } = useSimulationUsage();
 
   const [showSaveDialog, setShowSaveDialog] = useState(false);
   const [showLoadDialog, setShowLoadDialog] = useState(false);
+  const [showUpgradeModal, setShowUpgradeModal] = useState(false);
   const [simulationName, setSimulationName] = useState('');
   const [selectedSimulation, setSelectedSimulation] = useState('');
   const [saveSuccess, setSaveSuccess] = useState(false);
 
-  // Abrir diálogo de guardado
+  // Abrir diálogo de guardado (verificar límites primero)
   const handleOpenSaveDialog = () => {
     clearError(); // Limpiar errores anteriores
+    
+    // Verificar si puede guardar más simulaciones
+    if (usage && !usage.canSave) {
+      setShowUpgradeModal(true);
+      return;
+    }
+    
     setShowSaveDialog(true);
   };
 
@@ -81,6 +92,8 @@ export default function SaveLoadButtons({
 
     if (result) {
       setSaveSuccess(true);
+      // Actualizar contador de uso
+      await refetchUsage();
       setTimeout(() => {
         setShowSaveDialog(false);
         setSaveSuccess(false);
@@ -271,6 +284,16 @@ export default function SaveLoadButtons({
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Modal de Upgrade cuando se alcanza el límite */}
+      {usage && (
+        <UpgradeModal
+          isOpen={showUpgradeModal}
+          onClose={() => setShowUpgradeModal(false)}
+          currentUsage={usage.used}
+          currentLimit={usage.limit}
+        />
+      )}
     </>
   );
 }
