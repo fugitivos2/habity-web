@@ -82,12 +82,18 @@ export default function MiCuentaPage() {
     setError('')
 
     try {
+      // Construir nombre completo a partir de firstName + lastName
+      const fullName = `${formData.firstName.trim()} ${formData.lastName.trim()}`
+      
       const response = await fetch('/api/user/profile', {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(formData),
+        body: JSON.stringify({
+          ...formData,
+          name: fullName, // Asegurar que name se actualice
+        }),
       })
 
       const data = await response.json()
@@ -96,9 +102,10 @@ export default function MiCuentaPage() {
         throw new Error(data.error || 'Error al guardar')
       }
 
-      // Actualizar sesión con el nuevo nombre
-      if (formData.name !== session?.user?.name) {
-        await update({ name: formData.name })
+      // Actualizar sesión con el nuevo nombre completo
+      const fullName = `${formData.firstName.trim()} ${formData.lastName.trim()}`
+      if (fullName !== session?.user?.name) {
+        await update({ name: fullName })
       }
 
       setSaveSuccess(true)
@@ -156,13 +163,21 @@ export default function MiCuentaPage() {
               <div className="h-24 w-24 rounded-full bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center text-white text-3xl font-bold shadow-lg">
                 {formData.name ? formData.name.charAt(0).toUpperCase() : formData.email?.charAt(0).toUpperCase()}
               </div>
-              <button className="absolute bottom-0 right-0 h-8 w-8 bg-white rounded-full border-2 border-gray-200 flex items-center justify-center hover:bg-gray-50 transition-colors">
-                <Camera className="h-4 w-4 text-gray-600" />
+              {/* Botón de cámara deshabilitado por ahora */}
+              <button 
+                type="button"
+                disabled
+                className="absolute bottom-0 right-0 h-8 w-8 bg-gray-100 rounded-full border-2 border-gray-300 flex items-center justify-center cursor-not-allowed opacity-50"
+                title="Próximamente: subir foto de perfil"
+              >
+                <Camera className="h-4 w-4 text-gray-400" />
               </button>
             </div>
             <div>
               <h3 className="text-lg font-semibold text-gray-900">
-                {formData.name || 'Sin nombre'}
+                {formData.firstName && formData.lastName 
+                  ? `${formData.firstName} ${formData.lastName}` 
+                  : formData.name || 'Sin nombre'}
               </h3>
               <p className="text-sm text-gray-600">{formData.email}</p>
               <p className="text-xs text-gray-500 mt-1">Miembro desde {new Date(session?.user?.emailVerified || Date.now()).getFullYear()}</p>
@@ -180,39 +195,10 @@ export default function MiCuentaPage() {
           </div>
 
           <form onSubmit={handleSubmit} className="p-6 space-y-6">
-            {/* Nombre completo y Email */}
+            {/* Nombre y Apellidos */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="space-y-2">
-                <Label htmlFor="name">Nombre completo *</Label>
-                <Input
-                  id="name"
-                  name="name"
-                  type="text"
-                  value={formData.name}
-                  onChange={handleChange}
-                  placeholder="Juan Pérez García"
-                  required
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="email">Email</Label>
-                <Input
-                  id="email"
-                  name="email"
-                  type="email"
-                  value={formData.email}
-                  disabled
-                  className="bg-gray-50"
-                />
-                <p className="text-xs text-gray-500">El email no se puede modificar</p>
-              </div>
-            </div>
-
-            {/* Nombre y Apellido */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div className="space-y-2">
-                <Label htmlFor="firstName">Nombre</Label>
+                <Label htmlFor="firstName">Nombre *</Label>
                 <Input
                   id="firstName"
                   name="firstName"
@@ -220,11 +206,12 @@ export default function MiCuentaPage() {
                   value={formData.firstName}
                   onChange={handleChange}
                   placeholder="Juan"
+                  required
                 />
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="lastName">Apellidos</Label>
+                <Label htmlFor="lastName">Apellidos *</Label>
                 <Input
                   id="lastName"
                   name="lastName"
@@ -232,6 +219,7 @@ export default function MiCuentaPage() {
                   value={formData.lastName}
                   onChange={handleChange}
                   placeholder="Pérez García"
+                  required
                 />
               </div>
             </div>
