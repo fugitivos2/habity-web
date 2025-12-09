@@ -103,7 +103,6 @@ export default function MiCuentaPage() {
       }
 
       // Actualizar sesión con el nuevo nombre completo
-      const fullName = `${formData.firstName.trim()} ${formData.lastName.trim()}`
       if (fullName !== session?.user?.name) {
         await update({ name: fullName })
       }
