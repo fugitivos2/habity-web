@@ -7,6 +7,9 @@ import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 
+// Marcar como ruta dinámica (necesario para getServerSession)
+export const dynamic = 'force-dynamic'
+
 // GET /api/user/profile - Obtener perfil del usuario
 export async function GET(request: NextRequest) {
   try {
