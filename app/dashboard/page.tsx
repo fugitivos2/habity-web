@@ -3,6 +3,7 @@ import { authOptions } from '@/lib/auth'
 import { redirect } from 'next/navigation'
 import { prisma } from '@/lib/prisma'
 import Link from 'next/link'
+import UserMenuWrapper from '@/components/layout/UserMenuWrapper'
 import { 
   Home, 
   Calculator, 
@@ -103,15 +104,7 @@ export default async function DashboardPage() {
                 </Link>
               </nav>
             </div>
-            <div className="flex items-center space-x-4">
-              <div className="text-right hidden sm:block">
-                <p className="text-sm font-medium text-gray-900">{user.name || 'Usuario'}</p>
-                <p className="text-xs text-gray-500">{currentPlan.icon} {currentPlan.name}</p>
-              </div>
-              <div className="h-10 w-10 rounded-full bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center text-white text-lg font-bold shadow-md">
-                {user.name ? user.name.charAt(0).toUpperCase() : user.email?.charAt(0).toUpperCase()}
-              </div>
-            </div>
+            <UserMenuWrapper />
           </div>
         </div>
       </header>
