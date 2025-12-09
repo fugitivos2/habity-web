@@ -285,7 +285,7 @@ export default function PricingPage() {
                       <span
                         className={`text-sm ${
                           feature.included ? 'text-gray-700' : 'text-gray-400'
-                        } ${feature.bold ? 'font-semibold' : ''}`}
+                        } ${'bold' in feature && feature.bold ? 'font-semibold' : ''}`}
                       >
                         {feature.text}
                       </span>
