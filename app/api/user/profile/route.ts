@@ -25,13 +25,12 @@ export async function GET(request: NextRequest) {
         id: true,
         email: true,
         name: true,
+        firstName: true,
+        lastName: true,
         phone: true,
-        address: true,
-        city: true,
-        postalCode: true,
-        country: true,
         emailVerified: true,
         role: true,
+        bio: true,
       }
     })
 
@@ -65,7 +64,7 @@ export async function PUT(request: NextRequest) {
     }
 
     const body = await request.json()
-    const { name, phone, address, city, postalCode, country } = body
+    const { name, firstName, lastName, phone, bio } = body
 
     // Validar datos
     if (!name || name.trim().length === 0) {
@@ -80,21 +79,19 @@ export async function PUT(request: NextRequest) {
       where: { id: session.user.id },
       data: {
         name: name.trim(),
+        firstName: firstName?.trim() || null,
+        lastName: lastName?.trim() || null,
         phone: phone?.trim() || null,
-        address: address?.trim() || null,
-        city: city?.trim() || null,
-        postalCode: postalCode?.trim() || null,
-        country: country?.trim() || 'España',
+        bio: bio?.trim() || null,
       },
       select: {
         id: true,
         email: true,
         name: true,
+        firstName: true,
+        lastName: true,
         phone: true,
-        address: true,
-        city: true,
-        postalCode: true,
-        country: true,
+        bio: true,
       }
     })
 

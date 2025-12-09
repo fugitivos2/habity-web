@@ -8,12 +8,12 @@ import {
   User,
   Mail,
   Phone,
-  MapPin,
   Save,
   Loader2,
   ChevronLeft,
   Camera,
   CheckCircle2,
+  FileText,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -26,11 +26,10 @@ export default function MiCuentaPage() {
   const [formData, setFormData] = useState({
     name: '',
     email: '',
+    firstName: '',
+    lastName: '',
     phone: '',
-    address: '',
-    city: '',
-    postalCode: '',
-    country: 'España',
+    bio: '',
   })
   
   const [isLoading, setIsLoading] = useState(false)
@@ -56,11 +55,10 @@ export default function MiCuentaPage() {
             setFormData({
               name: data.user.name || '',
               email: data.user.email || '',
+              firstName: data.user.firstName || '',
+              lastName: data.user.lastName || '',
               phone: data.user.phone || '',
-              address: data.user.address || '',
-              city: data.user.city || '',
-              postalCode: data.user.postalCode || '',
-              country: data.user.country || 'España',
+              bio: data.user.bio || '',
             })
           }
         })
@@ -69,7 +67,7 @@ export default function MiCuentaPage() {
     }
   }, [session])
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     setFormData({
       ...formData,
       [e.target.name]: e.target.value,
@@ -182,26 +180,23 @@ export default function MiCuentaPage() {
           </div>
 
           <form onSubmit={handleSubmit} className="p-6 space-y-6">
-            {/* Nombre y Email */}
+            {/* Nombre completo y Email */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="space-y-2">
-                <Label htmlFor="name">Nombre completo</Label>
+                <Label htmlFor="name">Nombre completo *</Label>
                 <Input
                   id="name"
                   name="name"
                   type="text"
                   value={formData.name}
                   onChange={handleChange}
-                  placeholder="Juan Pérez"
+                  placeholder="Juan Pérez García"
                   required
                 />
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="email">
-                  Email
-                  <span className="text-xs text-gray-500 ml-2">(no se puede cambiar)</span>
-                </Label>
+                <Label htmlFor="email">Email</Label>
                 <Input
                   id="email"
                   name="email"
@@ -210,6 +205,34 @@ export default function MiCuentaPage() {
                   disabled
                   className="bg-gray-50"
                 />
+                <p className="text-xs text-gray-500">El email no se puede modificar</p>
+              </div>
+            </div>
+
+            {/* Nombre y Apellido */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="space-y-2">
+                <Label htmlFor="firstName">Nombre</Label>
+                <Input
+                  id="firstName"
+                  name="firstName"
+                  type="text"
+                  value={formData.firstName}
+                  onChange={handleChange}
+                  placeholder="Juan"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="lastName">Apellidos</Label>
+                <Input
+                  id="lastName"
+                  name="lastName"
+                  type="text"
+                  value={formData.lastName}
+                  onChange={handleChange}
+                  placeholder="Pérez García"
+                />
               </div>
             </div>
 
@@ -217,7 +240,7 @@ export default function MiCuentaPage() {
             <div className="space-y-2">
               <Label htmlFor="phone">Teléfono</Label>
               <div className="relative">
-                <Phone className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
+                <Phone className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
                 <Input
                   id="phone"
                   name="phone"
@@ -230,87 +253,56 @@ export default function MiCuentaPage() {
               </div>
             </div>
 
-            {/* Dirección */}
+            {/* Bio */}
             <div className="space-y-2">
-              <Label htmlFor="address">Dirección</Label>
+              <Label htmlFor="bio">Biografía</Label>
               <div className="relative">
-                <MapPin className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
-                <Input
-                  id="address"
-                  name="address"
-                  type="text"
-                  value={formData.address}
+                <FileText className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                <textarea
+                  id="bio"
+                  name="bio"
+                  value={formData.bio}
                   onChange={handleChange}
-                  placeholder="Calle Principal, 123"
-                  className="pl-10"
+                  placeholder="Cuéntanos un poco sobre ti..."
+                  className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent min-h-[100px] resize-y"
+                  maxLength={500}
                 />
               </div>
+              <p className="text-xs text-gray-500">
+                {formData.bio.length}/500 caracteres
+              </p>
             </div>
 
-            {/* Ciudad, CP, País */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              <div className="space-y-2">
-                <Label htmlFor="city">Ciudad</Label>
-                <Input
-                  id="city"
-                  name="city"
-                  type="text"
-                  value={formData.city}
-                  onChange={handleChange}
-                  placeholder="Madrid"
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="postalCode">Código Postal</Label>
-                <Input
-                  id="postalCode"
-                  name="postalCode"
-                  type="text"
-                  value={formData.postalCode}
-                  onChange={handleChange}
-                  placeholder="28001"
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="country">País</Label>
-                <Input
-                  id="country"
-                  name="country"
-                  type="text"
-                  value={formData.country}
-                  onChange={handleChange}
-                  placeholder="España"
-                />
-              </div>
-            </div>
-
-            {/* Error/Success Messages */}
+            {/* Error Message */}
             {error && (
-              <div className="bg-red-50 border border-red-200 rounded-lg p-4 text-sm text-red-700">
+              <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg">
                 {error}
               </div>
             )}
 
+            {/* Success Message */}
             {saveSuccess && (
-              <div className="bg-green-50 border border-green-200 rounded-lg p-4 flex items-center gap-2 text-sm text-green-700">
-                <CheckCircle2 className="h-5 w-5" />
-                Cambios guardados correctamente
+              <div className="bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-lg flex items-center">
+                <CheckCircle2 className="h-5 w-5 mr-2" />
+                ¡Cambios guardados correctamente!
               </div>
             )}
 
             {/* Submit Button */}
             <div className="flex justify-end pt-4 border-t border-gray-200">
-              <Button type="submit" disabled={isSaving} className="gap-2">
+              <Button
+                type="submit"
+                disabled={isSaving}
+                className="bg-blue-600 hover:bg-blue-700"
+              >
                 {isSaving ? (
                   <>
-                    <Loader2 className="h-4 w-4 animate-spin" />
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                     Guardando...
                   </>
                 ) : (
                   <>
-                    <Save className="h-4 w-4" />
+                    <Save className="mr-2 h-4 w-4" />
                     Guardar Cambios
                   </>
                 )}
