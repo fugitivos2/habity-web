@@ -3,7 +3,7 @@ import { authOptions } from '@/lib/auth'
 import { redirect } from 'next/navigation'
 import { prisma } from '@/lib/prisma'
 import Link from 'next/link'
-import UserMenuWrapper from '@/components/layout/UserMenuWrapper'
+import DashboardHeader from '@/components/layout/DashboardHeader'
 import { 
   Home, 
   Calculator, 
@@ -75,39 +75,7 @@ export default async function DashboardPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
-      {/* Header con navegación */}
-      <header className="bg-white border-b border-gray-200">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center py-4">
-            <div className="flex items-center space-x-8">
-              <Link href="/" className="text-2xl font-bold text-blue-600">
-                tuHabity
-              </Link>
-              <nav className="hidden md:flex space-x-6">
-                <Link 
-                  href="/dashboard" 
-                  className="text-blue-600 font-medium border-b-2 border-blue-600 pb-1"
-                >
-                  Dashboard
-                </Link>
-                <Link 
-                  href="/simuladores" 
-                  className="text-gray-600 hover:text-gray-900 transition-colors"
-                >
-                  Simuladores
-                </Link>
-                <Link 
-                  href="/mis-simulaciones" 
-                  className="text-gray-600 hover:text-gray-900 transition-colors"
-                >
-                  Mis Simulaciones
-                </Link>
-              </nav>
-            </div>
-            <UserMenuWrapper />
-          </div>
-        </div>
-      </header>
+      <DashboardHeader />
 
       {/* Main Content */}
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
