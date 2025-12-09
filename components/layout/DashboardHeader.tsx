@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import ClientUserMenu from './ClientUserMenu'
+import UserMenu from './UserMenu'
 
 export default function DashboardHeader() {
   const pathname = usePathname()
@@ -50,7 +50,7 @@ export default function DashboardHeader() {
               </Link>
             </nav>
           </div>
-          <ClientUserMenu />
+          <UserMenu />
         </div>
       </div>
     </header>

@@ -16,14 +16,14 @@ import {
 export default function UserMenu() {
   const { data: session, status } = useSession()
   const [isOpen, setIsOpen] = useState(false)
+  const [mounted, setMounted] = useState(false)
   const dropdownRef = useRef<HTMLDivElement>(null)
   const router = useRouter()
 
-  // Debug: Log session status
+  // Evitar hydration mismatch
   useEffect(() => {
-    console.log('UserMenu - Session status:', status)
-    console.log('UserMenu - Session data:', session)
-  }, [session, status])
+    setMounted(true)
+  }, [])
 
   // Cerrar dropdown al hacer click fuera
   useEffect(() => {
@@ -37,10 +37,21 @@ export default function UserMenu() {
     return () => document.removeEventListener('mousedown', handleClickOutside)
   }, [])
 
-  if (!session?.user) {
-    console.log('UserMenu: No session user found, returning null')
-    return null
+  // No renderizar hasta que esté montado en el cliente
+  if (!mounted) {
+    return (
+      <div className="h-10 w-10 rounded-full bg-gray-200 animate-pulse" />
+    )
   }
+
+  // No mostrar si no hay sesión
+  if (status === 'loading') {
+    return (
+      <div className="h-10 w-10 rounded-full bg-gray-200 animate-pulse" />
+    )
+  }
+
+  if (!session?.user) return null
 
   const user = session.user
 
@@ -64,10 +75,7 @@ export default function UserMenu() {
       {/* Avatar Button */}
       <button
         type="button"
-        onClick={() => {
-          console.log('UserMenu clicked! Current state:', isOpen)
-          setIsOpen(!isOpen)
-        }}
+        onClick={() => setIsOpen(!isOpen)}
         className="flex items-center space-x-3 hover:bg-gray-100 rounded-lg px-3 py-2 transition-colors cursor-pointer"
         aria-label="Menú de usuario"
         aria-expanded={isOpen}
@@ -86,10 +94,7 @@ export default function UserMenu() {
 
       {/* Dropdown Menu */}
       {isOpen && (
-        <div 
-          className="absolute right-0 mt-2 w-64 bg-white rounded-lg shadow-xl border border-gray-200 py-2 animate-in fade-in slide-in-from-top-2 duration-200"
-          style={{ zIndex: 9999 }}
-        >
+        <div className="absolute right-0 mt-2 w-64 bg-white rounded-lg shadow-xl border border-gray-200 py-2 z-[9999]">
           {/* User Info */}
           <div className="px-4 py-3 border-b border-gray-100">
             <p className="text-sm font-semibold text-gray-900 truncate">
