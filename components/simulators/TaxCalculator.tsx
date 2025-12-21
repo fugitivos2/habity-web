@@ -7,6 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Separator } from '@/components/ui/separator';
 import { Calculator, TrendingUp, Home, AlertCircle, Euro, Plus, X } from 'lucide-react';
 import SaveLoadButtons from './SaveLoadButtons';
+import UsageBadge from '@/components/simulations/UsageBadge';
 
 // Tipos de IRPF por ganancia patrimonial (2024)
 const IRPF_BRACKETS = [
@@ -519,6 +520,11 @@ export default function TaxCalculator() {
               </p>
             </CardContent>
           </Card>
+
+          {/* Badge de Uso */}
+          <div className="mb-4">
+            <UsageBadge showUpgradeButton={false} size="sm" />
+          </div>
 
           {/* Botones Guardar/Cargar */}
           <SaveLoadButtons

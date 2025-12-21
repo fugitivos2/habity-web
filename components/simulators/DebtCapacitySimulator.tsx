@@ -19,6 +19,7 @@ import {
   Calendar
 } from 'lucide-react';
 import SaveLoadButtons from './SaveLoadButtons';
+import UsageBadge from '@/components/simulations/UsageBadge';
 
 // Tipos
 interface ExtraIncome {
@@ -711,6 +712,11 @@ export default function DebtCapacitySimulator() {
           )}
         </CardContent>
       </Card>
+
+      {/* Badge de Uso */}
+      <div className="mb-4">
+        <UsageBadge showUpgradeButton={false} size="sm" />
+      </div>
 
       {/* Botones Guardar/Cargar */}
       <SaveLoadButtons

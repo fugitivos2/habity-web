@@ -8,6 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { AUTONOMOUS_REGIONS, type Region } from '@/lib/simulators/purchase-costs';
 import { FileText, Scale, Building2, Calculator, AlertCircle } from 'lucide-react';
 import SaveLoadButtons from './SaveLoadButtons';
+import UsageBadge from '@/components/simulations/UsageBadge';
 
 export default function PurchaseCostsSimulator() {
   // Estados principales
@@ -395,6 +396,11 @@ export default function PurchaseCostsSimulator() {
               </div>
             </CardContent>
           </Card>
+
+          {/* Badge de Uso */}
+          <div className="mb-4">
+            <UsageBadge showUpgradeButton={false} size="sm" />
+          </div>
 
           {/* Botones Guardar/Cargar */}
           <SaveLoadButtons

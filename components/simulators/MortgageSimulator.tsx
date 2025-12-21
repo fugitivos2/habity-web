@@ -9,6 +9,7 @@ import { calculateMortgage } from '@/lib/simulators/mortgage';
 import type { MortgageSimulationParams, MortgageSimulationResult } from '@/lib/simulators/mortgage';
 import { Calculator, TrendingUp, Calendar, Percent, Home, Wallet } from 'lucide-react';
 import SaveLoadButtons from './SaveLoadButtons';
+import UsageBadge from '@/components/simulations/UsageBadge';
 
 export default function MortgageSimulator() {
   const [params, setParams] = useState<MortgageSimulationParams>({
@@ -286,6 +287,13 @@ export default function MortgageSimulator() {
                 </div>
               </CardContent>
             </Card>
+          )}
+
+          {/* Badge de Uso */}
+          {result && (
+            <div className="mb-4">
+              <UsageBadge showUpgradeButton={false} size="sm" />
+            </div>
           )}
 
           {/* Botones Guardar/Cargar */}

@@ -4,6 +4,7 @@ import { redirect } from 'next/navigation'
 import { prisma } from '@/lib/prisma'
 import Link from 'next/link'
 import DashboardHeader from '@/components/layout/DashboardHeader'
+import SubscriptionSidebar from '@/components/dashboard/SubscriptionSidebar'
 import { 
   Home, 
   Calculator, 
@@ -295,52 +296,14 @@ export default async function DashboardPage() {
               )}
             </div>
 
-            {/* Info del Plan */}
-            <div className={`bg-gradient-to-br from-${currentPlan.color}-50 to-${currentPlan.color}-100 rounded-xl p-6 border border-${currentPlan.color}-200`}>
-              <div className="flex items-center justify-between mb-3">
-                <h3 className="font-semibold text-gray-900 flex items-center">
-                  {currentPlan.icon} Plan {currentPlan.name}
-                </h3>
-                <span className={`px-3 py-1 bg-${currentPlan.color}-200 text-${currentPlan.color}-800 text-xs font-medium rounded-full`}>
-                  Activo
-                </span>
-              </div>
-              
-              <div className="space-y-2 mb-4">
-                <div className="flex justify-between text-sm">
-                  <span className="text-gray-700">Simulaciones este mes:</span>
-                  <span className="font-semibold text-gray-900">
-                    {simulationsUsed} / {currentPlan.limit === Infinity ? '∞' : currentPlan.limit}
-                  </span>
-                </div>
-                {subscription?.expiresAt && (
-                  <div className="flex justify-between text-sm">
-                    <span className="text-gray-700">Renovación:</span>
-                    <span className="font-semibold text-gray-900">
-                      {new Date(subscription.expiresAt).toLocaleDateString('es-ES')}
-                    </span>
-                  </div>
-                )}
-              </div>
-
-              {currentPlan.limit !== Infinity && usagePercentage > 70 && (
-                <div className="bg-white rounded-lg p-4 mb-4 border border-yellow-200">
-                  <p className="text-sm text-yellow-800 font-medium mb-2">
-                    ⚠️ Te estás acercando al límite
-                  </p>
-                  <p className="text-xs text-yellow-700">
-                    Considera mejorar tu plan para acceso ilimitado
-                  </p>
-                </div>
-              )}
-
-              <Link
-                href="/pricing"
-                className={`block w-full text-center py-2.5 px-4 bg-${currentPlan.color}-600 hover:bg-${currentPlan.color}-700 text-white rounded-lg font-medium transition-colors`}
-              >
-                {currentPlan.name === 'Notaría' ? 'Ver características' : 'Mejorar plan'}
-              </Link>
-            </div>
+            {/* Sidebar de Suscripción */}
+            <SubscriptionSidebar
+              planName={currentPlan.name}
+              planIcon={currentPlan.icon}
+              planColor={currentPlan.color}
+              planLimit={currentPlan.limit}
+              expiresAt={subscription?.expiresAt?.toISOString()}
+            />
           </div>
         </div>
       </main>

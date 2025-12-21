@@ -6,6 +6,7 @@ import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Separator } from '@/components/ui/separator';
 import SaveLoadButtons from './SaveLoadButtons';
+import UsageBadge from '@/components/simulations/UsageBadge';
 import { 
   Hammer, 
   Paintbrush, 
@@ -621,6 +622,11 @@ export default function RenovationCalculator() {
               </div>
             </CardContent>
           </Card>
+
+          {/* Badge de Uso */}
+          <div className="mb-4">
+            <UsageBadge showUpgradeButton={false} size="sm" />
+          </div>
 
           {/* Información Adicional */}
           {/* Botones Guardar/Cargar */}
