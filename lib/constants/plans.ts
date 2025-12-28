@@ -113,9 +113,14 @@ export type PlanId = keyof typeof SUBSCRIPTION_PLANS
 /**
  * Obtener configuración de un plan
  */
-export function getPlanConfig(planId: PlanId) {
-  return SUBSCRIPTION_PLANS[planId]
+/**
+ * Verificar si un plan tiene una característica
+ */
+export function hasFeature(planId: PlanId, feature: string): boolean {
+  const features = SUBSCRIPTION_PLANS[planId].features as readonly string[]
+  return features.includes(feature)
 }
+
 
 /**
  * Obtener límite de simulaciones por plan
