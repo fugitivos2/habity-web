@@ -110,7 +110,7 @@ export const SUBSCRIPTION_PLANS = {
 
 export type PlanId = keyof typeof SUBSCRIPTION_PLANS
 
-//**
+/**
  * Obtener configuración de un plan
  */
 export function getPlanConfig(planId: PlanId) {
