@@ -4,18 +4,17 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "npx prisma generate && next build",
+    "build": "prisma generate && next build",
     "start": "next start",
     "lint": "next lint",
-    "postinstall": "npx prisma generate",
-    "db:push": "npx prisma db push",
-    "db:migrate": "npx prisma migrate dev",
-    "db:generate": "npx prisma generate",
-    "db:seed": "npx tsx prisma/seed.ts",
-    "db:studio": "npx prisma studio"
+    "postinstall": "prisma generate",
+    "db:push": "prisma db push",
+    "db:migrate": "prisma migrate dev",
+    "db:generate": "prisma generate",
+    "db:seed": "tsx prisma/seed.ts",
+    "db:studio": "prisma studio"
   },
-
-   "dependencies": {
+  "dependencies": {
     "next": "14.2.18",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
@@ -53,14 +52,13 @@
     "@radix-ui/react-tooltip": "^1.0.7",
     "class-variance-authority": "^0.7.0",
     "clsx": "^2.0.0",
-     "zod": "^3.22.4",
+    "tailwind-merge": "^2.0.0",
+    "zod": "^3.22.4",
     "tailwindcss": "^3.4.1",
     "postcss": "^8",
     "autoprefixer": "^10.0.1"
   },
   "devDependencies": {
-      "devDependencies": {
     "tsx": "^4.6.0"
-  }
   }
 }
