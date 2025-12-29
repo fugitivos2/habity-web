@@ -129,7 +129,7 @@ export class UserService {
       select: { isActive: true, status: true }
     })
 
-    return user?.isActive && user?.status === 'ACTIVE'
+       return Boolean(user?.isActive && user?.status === 'ACTIVE')
   }
 
   /**
